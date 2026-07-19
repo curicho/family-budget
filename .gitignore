@@ -1,0 +1,12 @@
+cat > .gitignore <<'EOF'
+*.pem
+*.key
+build/
+__pycache__/
+*.pyc
+.env
+EOF
+git rm -r --cached build/ 2>/dev/null; git rm --cached enablebanking-key.pem enablebanking-pub.pem 2>/dev/null
+git add .gitignore
+git commit -m "remove keys and build artifacts; add gitignore"
+git push
