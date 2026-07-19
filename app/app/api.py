@@ -189,3 +189,89 @@ def networth():
         ).fetchall()
         total = sum(r["net_worth_gbp"] for r in rows)
     return {"total_gbp": total, "by_member": rows}
+
+
+# --------------------------------------------------------------------------
+# Banking (Enable Banking)
+# --------------------------------------------------------------------------
+from fastapi.responses import HTMLResponse  # noqa: E402
+
+from app import enablebanking  # noqa: E402
+
+
+def _redirect_url(request: Request) -> str:
+    base = os.getenv("PUBLIC_BASE_URL")
+    if not base:
+        base = f"{request.url.scheme}://{request.url.netloc}"
+    return f"{base.rstrip('/')}/api/banking/callback"
+
+
+@app.get("/api/banking/status", dependencies=[Depends(authed)])
+def banking_status():
+    if not enablebanking.configured():
+        return {"configured": False, "connections": []}
+    with db() as conn:
+        conns = conn.execute(
+            """SELECT id, display_name, aspsp_name, consent_expires_at,
+                      last_sync_at, last_sync_status,
+                      (consent_expires_at < now() + interval '14 days') AS expiring_soon
+               FROM provider_connection WHERE kind = 'enablebanking'
+               ORDER BY created_at"""
+        ).fetchall()
+    return {"configured": True, "connections": conns}
+
+
+@app.get("/api/banking/banks", dependencies=[Depends(authed)])
+def banking_banks(country: str = "GB"):
+    return enablebanking.list_banks(country)
+
+
+class ConnectIn(BaseModel):
+    aspsp_name: str
+    country: str = "GB"
+
+
+@app.post("/api/banking/connect", dependencies=[Depends(authed)])
+def banking_connect(body: ConnectIn, request: Request):
+    url = enablebanking.start_auth(body.aspsp_name, body.country, _redirect_url(request))
+    return {"url": url}
+
+
+@app.get("/api/banking/callback")
+def banking_callback(code: str | None = None, state: str | None = None,
+                     error: str | None = None):
+    """Unauthenticated by necessity (the bank redirects here); the one-time
+    state token minted by start_auth is what authorizes this call."""
+    if error or not code or not state:
+        return HTMLResponse(
+            f"<h3>Bank connection failed: {error or 'missing code'}</h3>"
+            "<a href='/'>Back to app</a>", status_code=400)
+    try:
+        result = enablebanking.complete_auth(code, state)
+    except Exception as e:
+        return HTMLResponse(
+            f"<h3>Bank connection failed: {e}</h3><a href='/'>Back to app</a>",
+            status_code=400)
+    accounts = ", ".join(result["accounts"]) or "no accounts returned"
+    return HTMLResponse(
+        f"<h3>Connected {result['bank']}</h3><p>Linked: {accounts}</p>"
+        "<p>Transactions will appear after the next sync (or within a minute "
+        "if you trigger one).</p><a href='/'>Back to app</a>")
+
+
+@app.post("/api/banking/sync", dependencies=[Depends(authed)])
+def banking_sync():
+    enablebanking.sync_all()
+    return {"ok": True}
+
+
+@app.get("/api/transactions", dependencies=[Depends(authed)])
+def list_transactions(limit: int = 50):
+    with db() as conn:
+        return conn.execute(
+            """SELECT t.id, t.posted_at, t.amount, t.currency, t.description,
+                      a.name AS account_name
+               FROM transaction t JOIN account a ON a.id = t.account_id
+               ORDER BY t.posted_at DESC, t.created_at DESC LIMIT %s""",
+            (min(limit, 200),),
+        ).fetchall()

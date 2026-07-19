@@ -51,7 +51,7 @@ CREATE TABLE provider_connection (
     kind         provider_kind NOT NULL,
     display_name TEXT NOT NULL,
     credentials_enc BYTEA,                    -- provider tokens, app-layer encrypted
-    consent_expires_at TIMESTAMPTZ,           -- GoCardless: created + 90 days
+    consent_expires_at TIMESTAMPTZ,           -- Open Banking consent: created + 90 days
     last_sync_at TIMESTAMPTZ,
     last_sync_status TEXT,                    -- 'ok' | error summary
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now()

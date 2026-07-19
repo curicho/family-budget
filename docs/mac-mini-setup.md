@@ -86,8 +86,8 @@ kubectl -n family-budget create secret generic family-budget-secrets \
   --from-literal=MINIO_ROOT_PASSWORD="$(openssl rand -base64 24)" \
   --from-literal=APP_SECRET_KEY="$(openssl rand -base64 32)" \
   --from-literal=FIELD_ENCRYPTION_KEY="$(openssl rand -base64 32)" \
-  --from-literal=GOCARDLESS_SECRET_ID="..." \
-  --from-literal=GOCARDLESS_SECRET_KEY="..." \
+  --from-literal=ENABLEBANKING_APP_ID="..." \
+  --from-literal=ENABLEBANKING_PRIVATE_KEY="$(base64 -i enablebanking-key.pem)" \
   --from-literal=TRADING212_API_KEY="..." \
   --from-literal=COINBASE_API_KEY="..." \
   --from-literal=COINBASE_API_SECRET="..." \
@@ -96,7 +96,7 @@ kubectl -n family-budget create secret generic family-budget-secrets \
   --from-literal=B2_APP_KEY="..."
 ```
 
-Where the keys come from: GoCardless Bank Account Data → free account at bankaccountdata.gocardless.com; Trading212 → app Settings → API (read-only key); Coinbase → coinbase.com/settings/api with **read-only** scopes; Anthropic → console.anthropic.com; Backblaze B2 → create a bucket + app key scoped to that bucket only.
+Where the keys come from: Enable Banking → register an app at enablebanking.com Control Panel (Production env, browser-generated key); Trading212 → app Settings → API (read-only key); Coinbase → coinbase.com/settings/api with **read-only** scopes; Anthropic → console.anthropic.com; Backblaze B2 → create a bucket + app key scoped to that bucket only.
 
 Generate a backup encryption keypair and store the private half OFF the mini (password manager + printed copy):
 
@@ -137,4 +137,4 @@ Then do the restore drill ONCE now, while there's nothing to lose: download the 
 
 ## 8. Ongoing care
 
-macOS updates: let them install; OrbStack + the cluster auto-start on login (enable auto-login for your admin user in System Settings if the mini is physically secure, otherwise the cluster waits for you to log in after a reboot). Check the home page's "connection health" card weekly — it surfaces expiring GoCardless consents (90-day renewals) and stale pension valuations. Everything else is automated.
+macOS updates: let them install; OrbStack + the cluster auto-start on login (enable auto-login for your admin user in System Settings if the mini is physically secure, otherwise the cluster waits for you to log in after a reboot). Check the home page's "connection health" card weekly — it surfaces expiring bank consents (90-day renewals) and stale pension valuations. Everything else is automated.

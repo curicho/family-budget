@@ -10,9 +10,10 @@ COPY pyproject.toml ./
 COPY app/ ./app/
 RUN pip install --no-cache-dir .
 
-# migrations: base schema is 001
+# migrations: base schema is 001, then numbered files from db/migrations/
 RUN mkdir -p /app/migrations
 COPY db/schema.sql /app/migrations/001_base_schema.sql
+COPY db/migrations/ /app/migrations/
 
 RUN useradd -r -u 10001 appuser
 USER appuser

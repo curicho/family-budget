@@ -40,6 +40,19 @@
       </div>
     </div>
 
+    <h2>Banking</h2>
+    <div class="card" id="banking">
+      <div id="bank-connections"></div>
+      <div class="row">
+        <select id="bank-list"><option>Loading banks…</option></select>
+        <button onclick="connectBank()">Connect a bank</button>
+        <button onclick="syncNow()" style="background:#2a2f3a">Sync now</button>
+      </div>
+      <div class="muted" id="banking-note"></div>
+      <h2 style="margin-top:16px">Recent transactions</h2>
+      <table id="txns"></table>
+    </div>
+
     <h2>Accounts</h2>
     <div class="card">
       <table id="accounts"></table>
@@ -94,6 +107,7 @@ const creds = () => ({ email: email.value, password: pw.value });
 
 async function refresh() {
   const [members, accounts, nw] = await Promise.all([api('/members'), api('/accounts'), api('/networth')]);
+  refreshBanking();
   document.getElementById('members').innerHTML =
     members.map(m => `<tr><td>${m.name}</td><td class="muted">${m.is_child ? 'child' : ''}</td></tr>`).join('');
   document.getElementById('accounts').innerHTML =
@@ -124,6 +138,45 @@ async function addValuation() {
     as_of: new Date().toISOString().slice(0, 10),
     value_gbp: Number(document.getElementById('v-value').value) }) });
   refresh();
+}
+async function refreshBanking() {
+  try {
+    const st = await api('/banking/status');
+    const note = document.getElementById('banking-note');
+    if (!st.configured) {
+      note.textContent = 'Enable Banking credentials not configured on the server yet.';
+      document.getElementById('bank-list').innerHTML = '';
+      return;
+    }
+    document.getElementById('bank-connections').innerHTML = st.connections.map(c =>
+      `<div>${c.display_name} <span class="muted">— last sync: ${c.last_sync_at ? new Date(c.last_sync_at).toLocaleString() : 'never'} (${c.last_sync_status || '—'})${c.expiring_soon ? ' · <b style="color:#f6b26b">consent expiring soon — reconnect</b>' : ''}</span></div>`
+    ).join('') || '<div class="muted">No banks connected yet.</div>';
+    if (!window._banksLoaded) {
+      const banks = await api('/banking/banks?country=GB');
+      document.getElementById('bank-list').innerHTML =
+        banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+      window._banksLoaded = true;
+    }
+    const txns = await api('/transactions?limit=25');
+    document.getElementById('txns').innerHTML = txns.map(t =>
+      `<tr><td class="muted">${t.posted_at}</td><td>${t.description}</td>` +
+      `<td class="muted">${t.account_name}</td>` +
+      `<td style="text-align:right;color:${t.amount < 0 ? '#e88' : '#8e8'}">${Number(t.amount).toFixed(2)}</td></tr>`
+    ).join('') || '<tr><td class="muted">No transactions yet.</td></tr>';
+  } catch (e) {
+    document.getElementById('banking-note').textContent = 'Banking: ' + e.message;
+  }
+}
+async function connectBank() {
+  const r = await api('/banking/connect', { method: 'POST',
+    body: JSON.stringify({ aspsp_name: document.getElementById('bank-list').value, country: 'GB' }) });
+  window.location = r.url;   // off to the bank's approval screen
+}
+async function syncNow() {
+  document.getElementById('banking-note').textContent = 'Syncing…';
+  await api('/banking/sync', { method: 'POST' });
+  document.getElementById('banking-note').textContent = 'Sync complete.';
+  refreshBanking();
 }
 renderAuth();
 </script>

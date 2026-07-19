@@ -3,7 +3,7 @@
 image:
   repository: ghcr.io/YOURUSER/family-budget   # api, worker & web share one image
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always                            # 'latest' tag must re-pull on restart
 
 existingSecret: family-budget-secrets           # created manually (see setup guide)
 
@@ -22,7 +22,7 @@ worker:
   schedules:                                    # consumed by in-process scheduler
     sync_trading212: "15 * * * *"
     sync_coinbase:   "30 * * * *"
-    sync_gocardless: "0 6,12,18,22 * * *"
+    sync_banking:    "0 6,12,18,22 * * *"
     prices_fx:       "0 18 * * 1-5"
     snapshot:        "10 2 * * *"
     insights_rules:  "40 2 * * *"
@@ -62,6 +62,7 @@ backup:
   schedule: "0 3 * * *"
   agePublicKey: ""                              # set via --set backup.agePublicKey=age1...
   b2Bucket: family-budget-backups
+  b2Endpoint: "https://s3.eu-central-003.backblazeb2.com"  # match YOUR bucket's endpoint (B2 console → bucket details)
   retention: { daily: 7, weekly: 4, monthly: 12 }
 
 networkPolicy:
@@ -70,7 +71,7 @@ networkPolicy:
   # with plain NetworkPolicy this is enforced at 0.0.0.0/0:443 — tighten if your CNI
   # supports FQDN rules)
   allowedEgress:
-    - bankaccountdata.gocardless.com
+    - bankaccountdata.enablebanking.com
     - live.trading212.com
     - api.coinbase.com
     - api.anthropic.com

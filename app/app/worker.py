@@ -31,10 +31,9 @@ def sync_coinbase() -> None:
     _log("coinbase: sync not yet implemented (phase 3)")
 
 
-def sync_gocardless() -> None:
-    if not os.getenv("GOCARDLESS_SECRET_ID"):
-        return _log("gocardless: no credentials configured, skipping")
-    _log("gocardless: sync not yet implemented (phase 2)")
+def sync_banking() -> None:
+    from app import enablebanking
+    enablebanking.sync_all(log=_log)
 
 
 def prices_fx() -> None:
@@ -72,7 +71,7 @@ def insights_llm() -> None:
 JOBS = {
     "sync_trading212": sync_trading212,
     "sync_coinbase": sync_coinbase,
-    "sync_gocardless": sync_gocardless,
+    "sync_banking": sync_banking,
     "prices_fx": prices_fx,
     "snapshot": snapshot,
     "insights_rules": insights_rules,

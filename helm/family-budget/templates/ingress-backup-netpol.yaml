@@ -43,6 +43,8 @@ spec:
               value: {{ .Values.backup.agePublicKey | quote }}
             - name: B2_BUCKET
               value: {{ .Values.backup.b2Bucket | quote }}
+            - name: B2_ENDPOINT
+              value: {{ .Values.backup.b2Endpoint | quote }}
             - name: RETENTION_JSON
               value: {{ .Values.backup.retention | toJson | quote }}
             {{- include "fb.env" . | nindent 12 }}
