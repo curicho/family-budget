@@ -1,0 +1,77 @@
+# family-budget chart values — tuned for a Mac mini (OrbStack k8s)
+
+image:
+  repository: ghcr.io/YOURUSER/family-budget   # api, worker & web share one image
+  tag: latest
+  pullPolicy: IfNotPresent
+
+existingSecret: family-budget-secrets           # created manually (see setup guide)
+
+api:
+  replicas: 1
+  port: 8000
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: "1",  memory: 512Mi }
+
+worker:
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 384Mi }
+    limits:   { cpu: "1",  memory: 768Mi }
+  schedules:                                    # consumed by in-process scheduler
+    sync_trading212: "15 * * * *"
+    sync_coinbase:   "30 * * * *"
+    sync_gocardless: "0 6,12,18,22 * * *"
+    prices_fx:       "0 18 * * 1-5"
+    snapshot:        "10 2 * * *"
+    insights_rules:  "40 2 * * *"
+    insights_llm:    "0 8 * * 6"                # Saturday morning review
+
+web:
+  replicas: 1
+  port: 8080
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits:   { cpu: 250m, memory: 128Mi }
+
+ingress:
+  enabled: true
+  className: nginx
+  host: budget.local                            # or use `tailscale serve` → web Service
+  tls: false                                    # Tailscale provides TLS if you use serve
+
+postgres:
+  image: postgres:16-alpine
+  storage: 10Gi
+  storageClassName: ""                          # OrbStack default
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: "1",  memory: 1Gi }
+
+redis:
+  image: redis:7-alpine
+
+minio:
+  image: minio/minio:latest
+  storage: 20Gi
+  buckets: [documents, backups]
+
+backup:
+  enabled: true
+  schedule: "0 3 * * *"
+  agePublicKey: ""                              # set via --set backup.agePublicKey=age1...
+  b2Bucket: family-budget-backups
+  retention: { daily: 7, weekly: 4, monthly: 12 }
+
+networkPolicy:
+  enabled: true
+  # Egress allow-list for api/worker (DNS names resolved by egress proxy or CiliumFQDN;
+  # with plain NetworkPolicy this is enforced at 0.0.0.0/0:443 — tighten if your CNI
+  # supports FQDN rules)
+  allowedEgress:
+    - bankaccountdata.gocardless.com
+    - live.trading212.com
+    - api.coinbase.com
+    - api.anthropic.com
+    - api.backblazeb2.com

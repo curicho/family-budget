@@ -1,0 +1,83 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "fb.name" . }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+  - host: {{ .Values.ingress.host }}
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend: { service: { name: {{ include "fb.name" . }}-api, port: { number: 8000 } } }
+      - path: /
+        pathType: Prefix
+        backend: { service: { name: {{ include "fb.name" . }}-web, port: { number: 8080 } } }
+{{- end }}
+---
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "fb.name" . }}-backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            command: ["app", "backup"]
+            # `app backup` does: pg_dump -Fc | age -r $AGE_PUBLIC_KEY → upload to B2
+            # + mirror MinIO documents bucket → B2, then prune per retention policy
+            env:
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ .Values.existingSecret }}, key: POSTGRES_PASSWORD } }
+            - name: AGE_PUBLIC_KEY
+              value: {{ .Values.backup.agePublicKey | quote }}
+            - name: B2_BUCKET
+              value: {{ .Values.backup.b2Bucket | quote }}
+            - name: RETENTION_JSON
+              value: {{ .Values.backup.retention | toJson | quote }}
+            {{- include "fb.env" . | nindent 12 }}
+{{- end }}
+---
+{{- if .Values.networkPolicy.enabled }}
+# Data stores accept traffic only from app pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fb.name" . }}-datastores
+spec:
+  podSelector:
+    matchExpressions:
+    - { key: app, operator: In, values: [fb-postgres, fb-redis, fb-minio] }
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - podSelector:
+        matchExpressions:
+        - { key: app, operator: In, values: [fb-api, fb-worker] }
+---
+# App pods: allow DNS + HTTPS egress only (FQDN allow-listing needs Cilium;
+# on OrbStack's default CNI this is the practical enforcement level)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fb.name" . }}-app-egress
+spec:
+  podSelector:
+    matchExpressions:
+    - { key: app, operator: In, values: [fb-api, fb-worker] }
+  policyTypes: [Egress]
+  egress:
+  - to: [{ podSelector: {} }]                 # in-namespace (db/redis/minio)
+  - ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]
+  - ports: [{ port: 443, protocol: TCP }]     # provider APIs
+{{- end }}

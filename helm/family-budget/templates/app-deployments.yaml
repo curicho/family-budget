@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fb.name" . }}-api
+  labels: {{- include "fb.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels: { app: fb-api }
+  template:
+    metadata:
+      labels: { app: fb-api }
+    spec:
+      initContainers:
+      - name: migrate
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: ["app", "migrate"]
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom: { secretKeyRef: { name: {{ .Values.existingSecret }}, key: POSTGRES_PASSWORD } }
+        {{- include "fb.env" . | nindent 8 }}
+      containers:
+      - name: api
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["app", "serve"]
+        ports: [{ containerPort: {{ .Values.api.port }} }]
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom: { secretKeyRef: { name: {{ .Values.existingSecret }}, key: POSTGRES_PASSWORD } }
+        {{- include "fb.env" . | nindent 8 }}
+        readinessProbe:
+          httpGet: { path: /healthz, port: {{ .Values.api.port }} }
+          initialDelaySeconds: 5
+        resources: {{- toYaml .Values.api.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fb.name" . }}-api
+spec:
+  selector: { app: fb-api }
+  ports: [{ port: 8000, targetPort: {{ .Values.api.port }} }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fb.name" . }}-worker
+  labels: {{- include "fb.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels: { app: fb-worker }
+  template:
+    metadata:
+      labels: { app: fb-worker }
+    spec:
+      containers:
+      - name: worker
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: ["app", "worker"]          # queue consumer + in-process scheduler
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom: { secretKeyRef: { name: {{ .Values.existingSecret }}, key: POSTGRES_PASSWORD } }
+        - name: SCHEDULES_JSON
+          value: {{ .Values.worker.schedules | toJson | quote }}
+        {{- include "fb.env" . | nindent 8 }}
+        resources: {{- toYaml .Values.worker.resources | nindent 10 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fb.name" . }}-web
+  labels: {{- include "fb.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels: { app: fb-web }
+  template:
+    metadata:
+      labels: { app: fb-web }
+    spec:
+      containers:
+      - name: web
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: ["app", "web"]             # serves the built SPA + proxies /api
+        ports: [{ containerPort: {{ .Values.web.port }} }]
+        resources: {{- toYaml .Values.web.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fb.name" . }}-web
+spec:
+  selector: { app: fb-web }
+  ports: [{ port: 8080, targetPort: {{ .Values.web.port }} }]
