@@ -211,13 +211,29 @@ tr:last-child td { border-bottom: none; }
 /* ============================== state & utils ============================== */
 
 const TOKEN_KEY = "fb_token";
-const S = { token: localStorage.getItem(TOKEN_KEY), members: [], accounts: [], categories: [] };
+
+function readCookie(name) {
+  const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[$()*+.?[\\\]^{|}]/g, "\\$&") + "=([^;]*)"));
+  return m ? decodeURIComponent(m[1]) : null;
+}
 
 function setToken(token) {
-  S.token = token;
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
+  S.token = token || null;
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+    // Cookie backup (same-origin) — survives some private-mode / storage quirks
+    document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; Path=/; Max-Age=${12 * 3600}; SameSite=Lax`;
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+    document.cookie = `${TOKEN_KEY}=; Path=/; Max-Age=0; SameSite=Lax`;
+  }
 }
+
+const S = {
+  token: localStorage.getItem(TOKEN_KEY) || readCookie(TOKEN_KEY),
+  members: [], accounts: [], categories: [],
+};
+
 
 const NAV = [
   ["#home", "Home"], ["#txns", "Transactions"], ["#review", "Review"],

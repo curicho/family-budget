@@ -36,4 +36,12 @@ def spa(path: str):
     target = STATIC / path
     if path and target.is_file():
         return FileResponse(target)
-    return FileResponse(STATIC / "index.html")
+    # Never let browsers/proxies cache the SPA shell — it embeds the JS that
+    # holds auth restore logic; a stale index.html looks like "I'm signed out".
+    return FileResponse(
+        STATIC / "index.html",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+        },
+    )
