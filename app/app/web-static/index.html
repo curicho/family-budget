@@ -40,23 +40,18 @@
       </div>
     </div>
 
-    <h2>Banking</h2>
+    <h2>Transactions</h2>
     <div class="card" id="banking">
-      <div id="bank-connections"></div>
-      <div class="row">
-        <select id="bank-list"><option>Loading banks…</option></select>
-        <button onclick="connectBank()">Connect a bank</button>
-        <button onclick="syncNow()" style="background:#2a2f3a">Sync now</button>
-      </div>
-      <div class="muted" id="banking-note"></div>
-      <h2 style="margin-top:16px">Import statement (CSV or PDF)</h2>
       <div class="row">
         <input type="file" id="csv-file" accept=".csv,.pdf,text/csv,application/pdf">
         <select id="csv-account"></select>
-        <button onclick="importCsv()">Import</button>
+        <button onclick="importCsv()">Import statement</button>
       </div>
-      <div class="muted" id="csv-note">CSV exports and text-based PDF statements from most UK banks are auto-detected. Scanned/image PDFs won't work. Re-importing the same file never duplicates.</div>
-      <h2 style="margin-top:16px">Recent transactions</h2>
+      <div class="muted" id="csv-note">CSV exports and text-based PDF statements from most UK banks are auto-detected. Re-importing the same file never duplicates.</div>
+      <div class="row" style="margin-top:12px">
+        <select id="txn-account-filter"><option value="">All accounts</option></select>
+        <span class="muted" id="txn-summary"></span>
+      </div>
       <table id="txns"></table>
     </div>
 
@@ -148,54 +143,31 @@ async function addValuation() {
     value_gbp: Number(document.getElementById('v-value').value) }) });
   refresh();
 }
-async function refreshBanking() {
-  const note = document.getElementById('banking-note');
-  // Transactions FIRST — never blocked by provider errors
+async function refreshBanking() {   // kept name so existing callers work
   try {
-    const txns = await api('/transactions?limit=25');
-    document.getElementById('txns').innerHTML = txns.map(t =>
+    const filter = document.getElementById('txn-account-filter').value;
+    const txns = await api('/transactions?limit=100');
+    const shown = filter ? txns.filter(t => t.account_name === filter) : txns;
+    document.getElementById('txns').innerHTML = shown.map(t =>
       `<tr><td class="muted">${t.posted_at}</td><td>${t.description}</td>` +
       `<td class="muted">${t.account_name}</td>` +
       `<td style="text-align:right;color:${t.amount < 0 ? '#e88' : '#8e8'}">${Number(t.amount).toFixed(2)}</td></tr>`
-    ).join('') || '<tr><td class="muted">No transactions yet.</td></tr>';
+    ).join('') || '<tr><td class="muted">No transactions yet — import a statement above.</td></tr>';
+    const spend = shown.filter(t => t.amount < 0).reduce((s, t) => s + Number(t.amount), 0);
+    const income = shown.filter(t => t.amount > 0).reduce((s, t) => s + Number(t.amount), 0);
+    document.getElementById('txn-summary').textContent = shown.length
+      ? `${shown.length} shown · in £${income.toFixed(2)} · out £${Math.abs(spend).toFixed(2)}`
+      : '';
+    const accounts = [...new Set(txns.map(t => t.account_name))];
+    const sel = document.getElementById('txn-account-filter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All accounts</option>' +
+      accounts.map(a => `<option${a === current ? ' selected' : ''}>${a}</option>`).join('');
+    sel.onchange = refreshBanking;
   } catch (e) {
     document.getElementById('txns').innerHTML =
       `<tr><td class="muted">Could not load transactions: ${e.message}</td></tr>`;
   }
-  // Provider status/bank list — failures stay in their own lane
-  try {
-    const st = await api('/banking/status');
-    if (!st.configured) {
-      note.textContent = 'Enable Banking credentials not configured on the server yet.';
-      document.getElementById('bank-list').innerHTML = '';
-      return;
-    }
-    document.getElementById('bank-connections').innerHTML = st.connections.map(c =>
-      `<div>${c.display_name} <span class="muted">— last sync: ${c.last_sync_at ? new Date(c.last_sync_at).toLocaleString() : 'never'} (${c.last_sync_status || '—'})${c.expiring_soon ? ' · <b style="color:#f6b26b">consent expiring soon — reconnect</b>' : ''}</span></div>`
-    ).join('') || '<div class="muted">No banks connected yet.</div>';
-    if (!window._banksLoaded) {
-      const banks = await api('/banking/banks?country=GB');
-      document.getElementById('bank-list').innerHTML =
-        banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
-      window._banksLoaded = true;
-      note.textContent = '';
-    }
-  } catch (e) {
-    note.textContent = 'Bank feed unavailable: ' + e.message +
-      ' — statement import below works regardless.';
-    document.getElementById('bank-list').innerHTML = '<option>Bank feed unavailable</option>';
-  }
-}
-async function connectBank() {
-  const r = await api('/banking/connect', { method: 'POST',
-    body: JSON.stringify({ aspsp_name: document.getElementById('bank-list').value, country: 'GB' }) });
-  window.location = r.url;   // off to the bank's approval screen
-}
-async function syncNow() {
-  document.getElementById('banking-note').textContent = 'Syncing…';
-  await api('/banking/sync', { method: 'POST' });
-  document.getElementById('banking-note').textContent = 'Sync complete.';
-  refreshBanking();
 }
 async function importCsv() {
   const f = document.getElementById('csv-file').files[0];
