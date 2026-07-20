@@ -210,7 +210,14 @@ tr:last-child td { border-bottom: none; }
 
 /* ============================== state & utils ============================== */
 
-const S = { token: null, members: [], accounts: [], categories: [] };
+const TOKEN_KEY = "fb_token";
+const S = { token: localStorage.getItem(TOKEN_KEY), members: [], accounts: [], categories: [] };
+
+function setToken(token) {
+  S.token = token;
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
 
 const NAV = [
   ["#home", "Home"], ["#txns", "Transactions"], ["#review", "Review"],
@@ -253,6 +260,11 @@ async function api(path, opts = {}) {
   if (!(opts.body instanceof FormData)) headers["content-type"] = "application/json";
   if (S.token) headers.authorization = "Bearer " + S.token;
   const r = await fetch("/api" + path, { ...opts, headers });
+  if (r.status === 401 && !path.startsWith("/auth/")) {
+    setToken(null);
+    showLogin("Session expired — please log in again.");
+    throw new Error("not authenticated");
+  }
   if (r.status === 204) return null;
   let body = null;
   try { body = await r.json(); } catch { /* empty body */ }
@@ -337,17 +349,24 @@ async function doLogin() {
   if (!email || !password) return authMsg("Enter an email and password first.");
   try {
     const res = await api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
-    S.token = res.token;
+    setToken(res.token);
     await bootstrap();
   } catch (e) { authMsg(e.message); }
 }
 
-function doLogout() {
-  S.token = null;
+function showLogin(msg = "") {
   el("appShell").style.display = "none";
   el("authScreen").style.display = "flex";
+  authMsg(msg);
+}
+
+function doLogout() {
+  if (S.token) {
+    api("/auth/logout", { method: "POST" }).catch(() => {});
+  }
+  setToken(null);
   el("authPw").value = "";
-  authMsg("");
+  showLogin("");
   location.hash = "";
 }
 
@@ -1280,6 +1299,17 @@ el("authLoginBtn").addEventListener("click", doLogin);
 el("authRegisterBtn").addEventListener("click", doRegister);
 el("logoutBtn").addEventListener("click", doLogout);
 el("authPw").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+
+(async function boot() {
+  if (!S.token) return;
+  try {
+    await api("/members"); // cheap auth check
+    await bootstrap();
+  } catch {
+    setToken(null);
+    showLogin("");
+  }
+})();
 </script>
 </body>
 </html>

@@ -12,7 +12,55 @@ from pydantic import BaseModel
 
 hasher = PasswordHasher()
 SESSION_TTL = timedelta(hours=12)
-_sessions: dict[str, datetime] = {}  # token -> expiry (single-user; in-memory is fine)
+SESSION_TTL_SECS = int(SESSION_TTL.total_seconds())
+_sessions: dict[str, datetime] = {}  # fallback if Redis is down
+
+
+def _redis():
+    url = os.getenv("REDIS_URL")
+    if not url:
+        return None
+    try:
+        import redis
+        return redis.from_url(url, decode_responses=True, socket_connect_timeout=1)
+    except Exception:
+        return None
+
+
+def _session_set(token: str) -> None:
+    r = _redis()
+    if r is not None:
+        try:
+            r.setex(f"fb:sess:{token}", SESSION_TTL_SECS, "1")
+            return
+        except Exception:
+            pass
+    _sessions[token] = datetime.now(timezone.utc) + SESSION_TTL
+
+
+def _session_ok(token: str) -> bool:
+    if not token:
+        return False
+    r = _redis()
+    if r is not None:
+        try:
+            return bool(r.exists(f"fb:sess:{token}"))
+        except Exception:
+            pass
+    expiry = _sessions.get(token)
+    return bool(expiry and expiry >= datetime.now(timezone.utc))
+
+
+def _session_clear(token: str) -> None:
+    if not token:
+        return
+    r = _redis()
+    if r is not None:
+        try:
+            r.delete(f"fb:sess:{token}")
+        except Exception:
+            pass
+    _sessions.pop(token, None)
 
 
 def db() -> psycopg.Connection:
@@ -74,14 +122,20 @@ def login(creds: Credentials):
     except Exception:
         raise HTTPException(401, "invalid credentials")
     token = uuid.uuid4().hex
-    _sessions[token] = datetime.now(timezone.utc) + SESSION_TTL
+    _session_set(token)
     return {"token": token}
+
+
+@app.post("/api/auth/logout")
+def logout(request: Request):
+    token = (request.headers.get("authorization") or "").removeprefix("Bearer ").strip()
+    _session_clear(token)
+    return {"ok": True}
 
 
 def authed(request: Request) -> None:
     token = (request.headers.get("authorization") or "").removeprefix("Bearer ").strip()
-    expiry = _sessions.get(token)
-    if not expiry or expiry < datetime.now(timezone.utc):
+    if not _session_ok(token):
         raise HTTPException(401, "not authenticated")
 
 
