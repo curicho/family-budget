@@ -275,3 +275,64 @@ def list_transactions(limit: int = 50):
                ORDER BY t.posted_at DESC, t.created_at DESC LIMIT %s""",
             (min(limit, 200),),
         ).fetchall()
+
+
+# --------------------------------------------------------------------------
+# CSV import
+# --------------------------------------------------------------------------
+from fastapi import UploadFile, File, Form  # noqa: E402
+import hashlib as _hashlib  # noqa: E402
+
+from app import csvimport  # noqa: E402
+
+
+@app.post("/api/import/csv", dependencies=[Depends(authed)])
+async def import_csv(
+    account_id: str = Form(...),
+    dry_run: bool = Form(False),
+    file: UploadFile = File(...),
+):
+    content = await file.read()
+    if len(content) > 5_000_000:
+        raise HTTPException(413, "file too large")
+    try:
+        parsed = csvimport.parse(content)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+    if dry_run:
+        return {"detected": parsed["mapping"], "row_count": len(parsed["rows"]),
+                "preview": parsed["rows"][:5], "warnings": parsed["warnings"]}
+
+    sha = _hashlib.sha256(content).hexdigest()
+    with db() as conn:
+        acc = conn.execute(
+            "SELECT id, currency FROM account WHERE id = %s", (account_id,)
+        ).fetchone()
+        if not acc:
+            raise HTTPException(404, "account not found")
+
+        doc = conn.execute(
+            """INSERT INTO document (kind, object_key, filename, sha256)
+               VALUES ('csv', %s, %s, %s)
+               ON CONFLICT (sha256) DO UPDATE SET filename = EXCLUDED.filename
+               RETURNING id""",
+            (f"csv/{sha}", file.filename or "import.csv", sha),
+        ).fetchone()
+
+        inserted = 0
+        for r in parsed["rows"]:
+            res = conn.execute(
+                """INSERT INTO transaction
+                     (account_id, posted_at, amount, currency, description,
+                      source, external_id, document_id)
+                   VALUES (%s, %s, %s, %s, %s, 'csv_import', %s, %s)
+                   ON CONFLICT (account_id, source, external_id) DO NOTHING""",
+                (acc["id"], r["date"], r["amount"], acc["currency"],
+                 r["description"], r["external_id"], doc["id"]),
+            )
+            inserted += res.rowcount
+        conn.commit()
+
+    return {"imported": inserted, "duplicates_skipped": len(parsed["rows"]) - inserted,
+            "warnings": parsed["warnings"], "detected": parsed["mapping"]}

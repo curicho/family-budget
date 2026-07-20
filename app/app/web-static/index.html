@@ -49,6 +49,13 @@
         <button onclick="syncNow()" style="background:#2a2f3a">Sync now</button>
       </div>
       <div class="muted" id="banking-note"></div>
+      <h2 style="margin-top:16px">Import CSV statement</h2>
+      <div class="row">
+        <input type="file" id="csv-file" accept=".csv,text/csv">
+        <select id="csv-account"></select>
+        <button onclick="importCsv()">Import</button>
+      </div>
+      <div class="muted" id="csv-note">Exports from HSBC, Barclays, Lloyds, NatWest, Monzo, Starling, HL and most others are auto-detected. Re-importing the same file never duplicates.</div>
       <h2 style="margin-top:16px">Recent transactions</h2>
       <table id="txns"></table>
     </div>
@@ -116,6 +123,8 @@ async function refresh() {
   document.getElementById('a-owner').innerHTML = owners;
   document.getElementById('v-account').innerHTML =
     accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  document.getElementById('csv-account').innerHTML =
+    accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
   document.getElementById('nw-total').textContent =
     '£' + Number(nw.total_gbp).toLocaleString('en-GB', { maximumFractionDigits: 0 });
   document.getElementById('nw-members').innerHTML =
@@ -176,6 +185,23 @@ async function syncNow() {
   document.getElementById('banking-note').textContent = 'Syncing…';
   await api('/banking/sync', { method: 'POST' });
   document.getElementById('banking-note').textContent = 'Sync complete.';
+  refreshBanking();
+}
+async function importCsv() {
+  const f = document.getElementById('csv-file').files[0];
+  const note = document.getElementById('csv-note');
+  if (!f) { note.textContent = 'Choose a CSV file first.'; return; }
+  const fd = new FormData();
+  fd.append('account_id', document.getElementById('csv-account').value);
+  fd.append('file', f);
+  note.textContent = 'Importing…';
+  const r = await fetch('/api/import/csv', { method: 'POST', body: fd,
+    headers: { authorization: 'Bearer ' + token } });
+  const body = await r.json();
+  if (!r.ok) { note.textContent = 'Import failed: ' + (body.detail || r.status); return; }
+  note.textContent = `Imported ${body.imported} transactions` +
+    (body.duplicates_skipped ? `, ${body.duplicates_skipped} duplicates skipped` : '') +
+    (body.warnings.length ? ` — ${body.warnings.length} rows skipped (bad date/amount)` : '');
   refreshBanking();
 }
 renderAuth();

@@ -3,6 +3,7 @@ pyproject.toml
 app/app/api.py
 app/app/backup.py
 app/app/cli.py
+app/app/csvimport.py
 app/app/enablebanking.py
 app/app/migrate.py
 app/app/web.py
