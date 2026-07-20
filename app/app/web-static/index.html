@@ -686,44 +686,82 @@ async function renderAssets() {
   catch (e) { loadError = e.message; }
 
   const rows = (assets || []).map(a => {
-    const stale = a.is_stale ?? a.stale ?? (!a.latest_as_of);
+    const stale = a.is_stale ?? a.stale ?? (!a.latest_as_of && !a.last_valuation);
+    const owners = Array.isArray(a.owners)
+      ? a.owners.map(o => typeof o === "string" ? o : (o?.name || "")).filter(Boolean)
+      : [];
     return `
       <tr>
         <td>${esc(a.name)}</td>
         <td class="muted">${esc(a.type)}</td>
-        <td class="muted">${(a.owners || []).map(esc).join(", ") || "—"}</td>
+        <td class="muted">${owners.map(esc).join(", ") || "—"}</td>
         <td class="right">${a.latest_value_gbp != null ? gbp(a.latest_value_gbp, 0) : "—"}</td>
         <td class="muted">${fdate(a.latest_as_of || a.last_valuation)}</td>
         <td>${stale ? badge("stale", "warn") : badge("fresh", "good")}</td>
       </tr>`;
   }).join("");
 
+  const acctOpts = accountOptions(null); // any account — current, property, pension, etc.
+  const typeOpts = ASSET_TYPES.map(t => `<option value="${t}">${t}</option>`).join("");
+
   return `
+    ${card(`
+      <h2>Add an asset account</h2>
+      <p class="muted small">Property, vehicle, pension, ISA, etc. You only have bank accounts so far — create an asset here first, then value it below.</p>
+      <div class="row">
+        <input id="asset-name" placeholder="e.g. Home, SIPP, Car">
+        <select id="asset-type">${typeOpts}</select>
+        <select id="asset-owner">${memberOptions(null, false)}</select>
+        <button onclick="addAssetAccount()">Add account</button>
+        <span id="asset-add-note" class="muted small"></span>
+      </div>
+    `)}
     ${card(`
       <h2>Record a valuation</h2>
       <div class="form-grid">
-        <div class="field"><label>Account</label><select id="v-account">${accountOptions(null, ASSET_TYPES)}</select></div>
+        <div class="field"><label>Account</label>
+          <select id="v-account">${acctOpts || `<option value="">— no accounts yet —</option>`}</select>
+        </div>
         <div class="field"><label>Value (£)</label><input id="v-value" type="number" step="0.01" placeholder="0.00"></div>
         <div class="field"><label>As of</label><input id="v-date" type="date" value="${todayISO()}"></div>
         <div class="field"><label>Note</label><input id="v-note" placeholder="optional"></div>
       </div>
-      <button onclick="addValuation()">Save valuation</button>
+      <button onclick="addValuation()" ${acctOpts ? "" : "disabled"}>Save valuation</button>
       <span id="assets-note" class="muted small" style="margin-left:8px"></span>
     `)}
     ${card(`
       <h2>Assets &amp; liabilities</h2>
       ${loadError ? emptyRow("Couldn't load assets — " + loadError) :
         rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Owner(s)</th><th class="right">Latest value</th><th>As of</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`
-             : emptyRow("No asset accounts yet — add one under Accounts.")}
+             : emptyRow("No property / pension / investment accounts yet — add one above.")}
     `)}
   `;
 }
 
+async function addAssetAccount() {
+  const note = el("asset-add-note");
+  const name = el("asset-name").value.trim();
+  const owner = el("asset-owner").value;
+  if (!name) { note.textContent = "Name is required."; return; }
+  if (!owner) { note.textContent = "Pick an owner (add a member first if needed)."; return; }
+  try {
+    await api("/accounts", { method: "POST", body: JSON.stringify({
+      name, type: el("asset-type").value, owner_member_id: owner,
+      is_liability: el("asset-type").value === "liability",
+    }) });
+    S.accounts = await api("/accounts");
+    note.textContent = "Added — pick it in the valuation form below.";
+    el("view").innerHTML = await renderAssets();
+  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
+}
+
 async function addValuation() {
   const note = el("assets-note");
+  const account_id = el("v-account").value;
+  if (!account_id) { note.textContent = "Add or pick an account first."; return; }
   try {
     await api("/valuations", { method: "POST", body: JSON.stringify({
-      account_id: el("v-account").value,
+      account_id,
       as_of: el("v-date").value || todayISO(),
       value_gbp: Number(el("v-value").value || 0),
       note: el("v-note").value.trim() || null,
