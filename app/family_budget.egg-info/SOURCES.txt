@@ -6,6 +6,7 @@ app/app/cli.py
 app/app/csvimport.py
 app/app/enablebanking.py
 app/app/migrate.py
+app/app/pdfimport.py
 app/app/web.py
 app/app/worker.py
 app/app/web-static/index.html

@@ -49,13 +49,13 @@
         <button onclick="syncNow()" style="background:#2a2f3a">Sync now</button>
       </div>
       <div class="muted" id="banking-note"></div>
-      <h2 style="margin-top:16px">Import CSV statement</h2>
+      <h2 style="margin-top:16px">Import statement (CSV or PDF)</h2>
       <div class="row">
-        <input type="file" id="csv-file" accept=".csv,text/csv">
+        <input type="file" id="csv-file" accept=".csv,.pdf,text/csv,application/pdf">
         <select id="csv-account"></select>
         <button onclick="importCsv()">Import</button>
       </div>
-      <div class="muted" id="csv-note">Exports from HSBC, Barclays, Lloyds, NatWest, Monzo, Starling, HL and most others are auto-detected. Re-importing the same file never duplicates.</div>
+      <div class="muted" id="csv-note">CSV exports and text-based PDF statements from most UK banks are auto-detected. Scanned/image PDFs won't work. Re-importing the same file never duplicates.</div>
       <h2 style="margin-top:16px">Recent transactions</h2>
       <table id="txns"></table>
     </div>

@@ -284,6 +284,7 @@ from fastapi import UploadFile, File, Form  # noqa: E402
 import hashlib as _hashlib  # noqa: E402
 
 from app import csvimport  # noqa: E402
+from app import pdfimport  # noqa: E402
 
 
 @app.post("/api/import/csv", dependencies=[Depends(authed)])
@@ -293,10 +294,15 @@ async def import_csv(
     file: UploadFile = File(...),
 ):
     content = await file.read()
-    if len(content) > 5_000_000:
+    if len(content) > 10_000_000:
         raise HTTPException(413, "file too large")
+    is_pdf = content[:5] == b"%PDF-" or (file.filename or "").lower().endswith(".pdf")
     try:
-        parsed = csvimport.parse(content)
+        if is_pdf:
+            parsed = pdfimport.parse(content)
+            parsed.setdefault("mapping", {"format": "pdf"})
+        else:
+            parsed = csvimport.parse(content)
     except ValueError as e:
         raise HTTPException(422, str(e))
 
