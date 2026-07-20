@@ -76,3 +76,5 @@ networkPolicy:
     - api.coinbase.com
     - api.anthropic.com
     - api.backblazeb2.com
+    - query1.finance.yahoo.com
+    - api.frankfurter.app

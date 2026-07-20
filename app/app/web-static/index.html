@@ -5,188 +5,1243 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Family Budget</title>
 <style>
-  :root { --bg:#0f1115; --card:#181b22; --text:#e8e9ec; --muted:#9aa0ab; --accent:#4f8cff; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.5 -apple-system, system-ui, sans-serif; background:var(--bg); color:var(--text); }
-  main { max-width:820px; margin:0 auto; padding:24px 16px 64px; }
-  h1 { font-size:20px; } h2 { font-size:16px; margin:24px 0 8px; }
-  .card { background:var(--card); border-radius:12px; padding:16px; margin:12px 0; }
-  input, select, button { font:inherit; padding:8px 10px; border-radius:8px; border:1px solid #2a2f3a; background:#11141a; color:var(--text); }
-  button { background:var(--accent); border:none; cursor:pointer; }
-  .row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
-  .muted { color:var(--muted); font-size:13px; }
-  .big { font-size:32px; font-weight:650; }
-  table { width:100%; border-collapse:collapse; } td, th { text-align:left; padding:6px 4px; border-bottom:1px solid #242936; }
+:root {
+  --bg: #f4f1ea;
+  --card: #ffffff;
+  --border: #e6e1d3;
+  --text: #23271f;
+  --muted: #767b70;
+  --accent: #2f6f4f;
+  --accent-ink: #ffffff;
+  --good: #1a7a44;
+  --good-bg: #e7f5ec;
+  --warn: #a3620a;
+  --warn-bg: #fbf0dd;
+  --bad: #b3261e;
+  --bad-bg: #fbe9e7;
+  --info: #2f5f8f;
+  --info-bg: #e9f1f9;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(30,30,20,.05), 0 1px 8px rgba(30,30,20,.04);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: 15px/1.5 -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-weight: 650; margin: 0; }
+h1 { font-size: 19px; }
+h2 { font-size: 15px; margin-bottom: 12px; }
+h3 { font-size: 13px; margin-bottom: 8px; }
+p { margin: 0 0 8px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- auth ---------- */
+.auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 24px;
+}
+.auth-card h1 { margin-bottom: 4px; }
+.auth-card .muted { margin-bottom: 20px; }
+.auth-card input { width: 100%; margin-bottom: 10px; }
+.auth-card .row { flex-direction: column; }
+.auth-card button { width: 100%; }
+.auth-card .btn-link { background: none; color: var(--accent); border: none; box-shadow: none; padding: 6px 0; width: auto; }
+
+/* ---------- app shell ---------- */
+header.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner {
+  max-width: 1180px; margin: 0 auto;
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 20px;
+  flex-wrap: wrap;
+}
+.brand { font-weight: 700; font-size: 16px; white-space: nowrap; }
+nav.nav { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+nav.nav a {
+  color: var(--muted); font-size: 13px; font-weight: 600;
+  padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+}
+nav.nav a:hover { background: var(--bg); text-decoration: none; color: var(--text); }
+nav.nav a.active { background: var(--accent); color: var(--accent-ink); }
+.container { max-width: 1180px; margin: 0 auto; padding: 20px; }
+
+/* ---------- basic elements ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.stack { display: flex; flex-direction: column; gap: 8px; }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.muted { color: var(--muted); font-size: 13px; }
+.small { font-size: 12px; }
+.big { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
+.mid { font-size: 22px; font-weight: 650; }
+.hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.pill-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
+input, select, button, textarea {
+  font: inherit; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: #fff; color: var(--text);
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+textarea { resize: vertical; }
+button {
+  background: var(--accent); color: var(--accent-ink); border: none;
+  cursor: pointer; font-weight: 600; padding: 8px 14px;
+}
+button:hover { filter: brightness(1.08); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+button.danger { background: var(--bad); }
+button.ghost { background: none; color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+button.small, .row button.small { padding: 5px 9px; font-size: 12px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+
+/* ---------- tables ---------- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+td.right, th.right { text-align: right; }
+tr:last-child td { border-bottom: none; }
+.amt-pos { color: var(--good); font-weight: 600; }
+.amt-neg { color: var(--text); }
+
+/* ---------- badges / status ---------- */
+.badge {
+  display: inline-block; font-size: 11.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+}
+.badge-good { background: var(--good-bg); color: var(--good); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+.badge-bad { background: var(--bad-bg); color: var(--bad); }
+.badge-info { background: var(--info-bg); color: var(--info); }
+.badge-muted { background: #f0eee6; color: var(--muted); }
+
+/* ---------- progress bars ---------- */
+.bar { height: 8px; border-radius: 999px; background: #edeae0; overflow: hidden; }
+.bar > div { height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.good > div { background: var(--good); }
+.bar.warn > div { background: var(--warn); }
+.bar.bad > div { background: var(--bad); }
+
+/* ---------- misc widgets ---------- */
+.nudge { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg); margin-bottom: 8px; }
+.nudge.info { background: var(--info-bg); }
+.nudge .msg { font-size: 13.5px; }
+.empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
+.chart-wrap svg { width: 100%; height: auto; display: block; }
+.hbar-row { display: grid; grid-template-columns: 130px 1fr auto; gap: 10px; align-items: center; margin: 6px 0; font-size: 13px; }
+.hbar-row .bar { height: 14px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.tabs button { background: none; color: var(--muted); border: 1px solid var(--border); }
+.tabs button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.insight-card { border-left: 4px solid var(--info); }
+.insight-card.sev-1, .insight-card.sev-2 { border-left-color: var(--bad); }
+.insight-card.sev-3 { border-left-color: var(--warn); }
+.insight-card.sev-4, .insight-card.sev-5 { border-left-color: var(--good); }
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field label { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 10px 0; }
+@media (max-width: 640px) {
+  .big { font-size: 26px; }
+  .container { padding: 14px; }
+}
 </style>
 </head>
 <body>
-<main>
-  <h1>Family Budget</h1>
-  <div id="auth" class="card"></div>
-  <div id="app" style="display:none">
-    <div class="card">
-      <div class="muted">Family net worth</div>
-      <div class="big" id="nw-total">—</div>
-      <table id="nw-members"></table>
-    </div>
 
-    <h2>Members</h2>
-    <div class="card">
-      <table id="members"></table>
-      <div class="row">
-        <input id="m-name" placeholder="Name">
-        <label class="muted"><input type="checkbox" id="m-child"> child</label>
-        <button onclick="addMember()">Add member</button>
-      </div>
-    </div>
-
-    <h2>Transactions</h2>
-    <div class="card" id="banking">
-      <div class="row">
-        <input type="file" id="csv-file" accept=".csv,.pdf,text/csv,application/pdf">
-        <select id="csv-account"></select>
-        <button onclick="importCsv()">Import statement</button>
-      </div>
-      <div class="muted" id="csv-note">CSV exports and text-based PDF statements from most UK banks are auto-detected. Re-importing the same file never duplicates.</div>
-      <div class="row" style="margin-top:12px">
-        <select id="txn-account-filter"><option value="">All accounts</option></select>
-        <span class="muted" id="txn-summary"></span>
-      </div>
-      <table id="txns"></table>
-    </div>
-
-    <h2>Accounts</h2>
-    <div class="card">
-      <table id="accounts"></table>
-      <div class="row">
-        <input id="a-name" placeholder="Account name">
-        <select id="a-type">
-          <option>current</option><option>savings</option><option>credit_card</option>
-          <option>isa</option><option>jisa</option><option>gia</option><option>sipp</option>
-          <option>workplace_pension</option><option>crypto</option><option>property</option>
-          <option>vehicle</option><option>other_asset</option><option>liability</option>
-        </select>
-        <select id="a-owner"></select>
-        <button onclick="addAccount()">Add account</button>
-      </div>
-      <div class="row">
-        <select id="v-account"></select>
-        <input id="v-value" type="number" step="0.01" placeholder="Value £">
-        <button onclick="addValuation()">Record valuation (today)</button>
-      </div>
-      <div class="muted">Phase 1: manual valuations. Bank feeds, investments and payslips arrive in later phases.</div>
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <h1>Family Budget</h1>
+    <p class="muted">Sign in to your household ledger.</p>
+    <div id="authMsg" class="muted small"></div>
+    <div class="row">
+      <input id="authEmail" type="email" placeholder="Email" autocomplete="username">
+      <input id="authPw" type="password" placeholder="Password" autocomplete="current-password">
+      <button id="authLoginBtn">Log in</button>
+      <button id="authRegisterBtn" class="btn-link">First run: create user</button>
     </div>
   </div>
-</main>
+</div>
+
+<div id="appShell" style="display:none">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Family Budget</div>
+      <nav class="nav" id="nav"></nav>
+      <button class="ghost" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+  <main class="container" id="view"></main>
+</div>
+
 <script>
-let token = null;
-const api = async (path, opts = {}) => {
-  const r = await fetch('/api' + path, { ...opts,
-    headers: { 'content-type': 'application/json',
-               ...(token ? { authorization: 'Bearer ' + token } : {}) } });
-  if (!r.ok) throw new Error((await r.json()).detail || r.status);
-  return r.json();
+"use strict";
+
+/* ============================== state & utils ============================== */
+
+const S = { token: null, members: [], accounts: [], categories: [] };
+
+const NAV = [
+  ["#home", "Home"], ["#txns", "Transactions"], ["#review", "Review"],
+  ["#budgets", "Budgets"], ["#assets", "Assets"], ["#policies", "Policies"],
+  ["#payslips", "Payslips"], ["#trends", "Trends"], ["#export", "Export"],
+  ["#members", "Members"], ["#accounts", "Accounts"], ["#banking", "Banking"],
+  ["#insights", "Insights"],
+];
+
+const ACCOUNT_TYPES = [
+  "current", "savings", "credit_card", "isa", "jisa", "gia", "sipp",
+  "workplace_pension", "crypto", "property", "vehicle", "other_asset", "liability",
+];
+const ASSET_TYPES = ["isa", "jisa", "gia", "sipp", "workplace_pension", "crypto",
+                      "property", "vehicle", "other_asset", "liability"];
+const INVESTMENT_TYPES = ["isa", "jisa", "gia", "sipp", "workplace_pension", "crypto"];
+const POLICY_KINDS = [
+  "life", "critical_illness", "income_protection", "home_buildings",
+  "home_contents", "car", "travel", "private_medical", "health_cash_plan", "other",
+];
+
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const gbp = (v, dp = 0) => new Intl.NumberFormat("en-GB", {
+  style: "currency", currency: "GBP", minimumFractionDigits: dp, maximumFractionDigits: dp,
+}).format(Number(v || 0));
+const fdate = s => {
+  if (!s) return "—";
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? String(s) : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
+const daysUntil = s => Math.round((new Date(s) - new Date()) / 86400000);
+const sel = (v, cur) => (cur !== null && cur !== undefined && String(v) === String(cur)) ? " selected" : "";
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const monthISO = () => new Date().toISOString().slice(0, 7);
+
+async function api(path, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (!(opts.body instanceof FormData)) headers["content-type"] = "application/json";
+  if (S.token) headers.authorization = "Bearer " + S.token;
+  const r = await fetch("/api" + path, { ...opts, headers });
+  if (r.status === 204) return null;
+  let body = null;
+  try { body = await r.json(); } catch { /* empty body */ }
+  if (!r.ok) throw new Error((body && body.detail) || `${r.status} ${r.statusText}`);
+  return body;
+}
+
+async function apiBlob(path) {
+  const r = await fetch("/api" + path, { headers: S.token ? { authorization: "Bearer " + S.token } : {} });
+  if (!r.ok) {
+    let msg = `${r.status} ${r.statusText}`;
+    try { msg = (await r.json()).detail || msg; } catch { /* not json */ }
+    throw new Error(msg);
+  }
+  const cd = r.headers.get("content-disposition") || "";
+  const m = /filename="?([^";]+)"?/.exec(cd);
+  return { blob: await r.blob(), filename: m ? m[1] : null };
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function card(inner, cls = "") { return `<div class="card ${cls}">${inner}</div>`; }
+function badge(text, kind = "muted") { return `<span class="badge badge-${kind}">${esc(text)}</span>`; }
+function severityBadge(sev) {
+  if (sev <= 2) return badge("high", "bad");
+  if (sev === 3) return badge("medium", "warn");
+  return badge("low", "good");
+}
+function emptyRow(msg) { return `<p class="empty">${esc(msg)}</p>`; }
+
+/* small reusable option builders */
+function memberOptions(selected, allowNone = true) {
+  return (allowNone ? `<option value="">— none —</option>` : "") +
+    S.members.map(m => `<option value="${m.id}"${sel(m.id, selected)}>${esc(m.name)}${m.is_child ? " (child)" : ""}</option>`).join("");
+}
+function accountOptions(selected, types = null) {
+  const list = types ? S.accounts.filter(a => types.includes(a.type)) : S.accounts;
+  return list.map(a => `<option value="${a.id}"${sel(a.id, selected)}>${esc(a.name)} · ${esc(a.type)}</option>`).join("");
+}
+function categoryOptions(selected, allowNone = true) {
+  const parents = S.categories.filter(c => !c.parent_id);
+  let html = allowNone ? `<option value="">— choose category —</option>` : "";
+  for (const p of parents) {
+    const kids = S.categories.filter(c => c.parent_id === p.id);
+    if (kids.length) {
+      html += `<optgroup label="${esc(p.name)}">`;
+      html += `<option value="${p.id}"${sel(p.id, selected)}>${esc(p.name)} (general)</option>`;
+      html += kids.map(k => `<option value="${k.id}"${sel(k.id, selected)}>${esc(k.name)}</option>`).join("");
+      html += `</optgroup>`;
+    } else {
+      html += `<option value="${p.id}"${sel(p.id, selected)}>${esc(p.name)}</option>`;
+    }
+  }
+  return html;
+}
+function categoryName(id) {
+  const c = S.categories.find(c => c.id === id);
+  return c ? c.name : null;
+}
+
+/* ============================== auth ============================== */
+
+function authMsg(msg = "") { el("authMsg").textContent = msg; }
+
+async function doRegister() {
+  const email = el("authEmail").value.trim(), password = el("authPw").value;
+  if (!email || !password) return authMsg("Enter an email and password first.");
+  try {
+    await api("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) });
+    authMsg("User created — now log in.");
+  } catch (e) { authMsg(e.message); }
+}
+
+async function doLogin() {
+  const email = el("authEmail").value.trim(), password = el("authPw").value;
+  if (!email || !password) return authMsg("Enter an email and password first.");
+  try {
+    const res = await api("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+    S.token = res.token;
+    await bootstrap();
+  } catch (e) { authMsg(e.message); }
+}
+
+function doLogout() {
+  S.token = null;
+  el("appShell").style.display = "none";
+  el("authScreen").style.display = "flex";
+  el("authPw").value = "";
+  authMsg("");
+  location.hash = "";
+}
+
+async function bootstrap() {
+  el("authScreen").style.display = "none";
+  el("appShell").style.display = "block";
+  renderNav();
+  try {
+    const [members, accounts, categories] = await Promise.all([
+      api("/members"), api("/accounts"), api("/categories").catch(() => []),
+    ]);
+    S.members = members || []; S.accounts = accounts || []; S.categories = categories || [];
+  } catch (e) { /* individual screens will surface their own errors */ }
+  if (!location.hash) location.hash = "#home";
+  render();
+}
+
+/* ============================== router / nav ============================== */
+
+function renderNav() {
+  el("nav").innerHTML = NAV.map(([hash, label]) => `<a href="${hash}">${esc(label)}</a>`).join("");
+}
+function highlightNav() {
+  const h = location.hash || "#home";
+  el("nav").querySelectorAll("a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === h));
+}
+
+const ROUTES = {
+  "#home": renderHome, "#txns": renderTxns, "#review": renderReview,
+  "#budgets": renderBudgets, "#assets": renderAssets, "#policies": renderPolicies,
+  "#payslips": renderPayslips, "#trends": renderTrends, "#export": renderExport,
+  "#members": renderMembers, "#accounts": renderAccounts, "#banking": renderBanking,
+  "#insights": renderInsights,
 };
 
-function renderAuth(msg = '') {
-  document.getElementById('auth').innerHTML = `
-    <div class="row"><input id="email" placeholder="Email"><input id="pw" type="password" placeholder="Password">
-    <button onclick="login()">Log in</button><button onclick="reg()">First-run: create user</button></div>
-    <div class="muted">${msg}</div>`;
-}
-async function reg() {
-  try { await api('/auth/register', { method:'POST', body: JSON.stringify(creds()) });
-        renderAuth('User created — now log in.'); }
-  catch (e) { renderAuth(e.message); }
-}
-async function login() {
-  try { token = (await api('/auth/login', { method:'POST', body: JSON.stringify(creds()) })).token;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('app').style.display = 'block'; refresh(); }
-  catch (e) { renderAuth(e.message); }
-}
-const creds = () => ({ email: email.value, password: pw.value });
-
-async function refresh() {
-  const [members, accounts, nw] = await Promise.all([api('/members'), api('/accounts'), api('/networth')]);
-  refreshBanking();
-  document.getElementById('members').innerHTML =
-    members.map(m => `<tr><td>${m.name}</td><td class="muted">${m.is_child ? 'child' : ''}</td></tr>`).join('');
-  document.getElementById('accounts').innerHTML =
-    accounts.map(a => `<tr><td>${a.name}</td><td class="muted">${a.type}</td></tr>`).join('');
-  const owners = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-  document.getElementById('a-owner').innerHTML = owners;
-  document.getElementById('v-account').innerHTML =
-    accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-  document.getElementById('csv-account').innerHTML =
-    accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-  document.getElementById('nw-total').textContent =
-    '£' + Number(nw.total_gbp).toLocaleString('en-GB', { maximumFractionDigits: 0 });
-  document.getElementById('nw-members').innerHTML =
-    nw.by_member.map(r => `<tr><td>${r.name}</td><td style="text-align:right">£${Number(r.net_worth_gbp).toLocaleString('en-GB', { maximumFractionDigits: 0 })}</td></tr>`).join('');
-}
-async function addMember() {
-  await api('/members', { method:'POST', body: JSON.stringify({ name: document.getElementById('m-name').value, is_child: document.getElementById('m-child').checked }) });
-  refresh();
-}
-async function addAccount() {
-  await api('/accounts', { method:'POST', body: JSON.stringify({
-    name: document.getElementById('a-name').value,
-    type: document.getElementById('a-type').value,
-    owner_member_id: document.getElementById('a-owner').value }) });
-  refresh();
-}
-async function addValuation() {
-  await api('/valuations', { method:'POST', body: JSON.stringify({
-    account_id: document.getElementById('v-account').value,
-    as_of: new Date().toISOString().slice(0, 10),
-    value_gbp: Number(document.getElementById('v-value').value) }) });
-  refresh();
-}
-async function refreshBanking() {   // kept name so existing callers work
+async function render() {
+  if (!S.token) return;
+  highlightNav();
+  const view = el("view");
+  const hash = location.hash || "#home";
+  const fn = ROUTES[hash] || renderHome;
+  view.innerHTML = `<p class="empty">Loading…</p>`;
   try {
-    const filter = document.getElementById('txn-account-filter').value;
-    const txns = await api('/transactions?limit=100');
-    const shown = filter ? txns.filter(t => t.account_name === filter) : txns;
-    document.getElementById('txns').innerHTML = shown.map(t =>
-      `<tr><td class="muted">${t.posted_at}</td><td>${t.description}</td>` +
-      `<td class="muted">${t.account_name}</td>` +
-      `<td style="text-align:right;color:${t.amount < 0 ? '#e88' : '#8e8'}">${Number(t.amount).toFixed(2)}</td></tr>`
-    ).join('') || '<tr><td class="muted">No transactions yet — import a statement above.</td></tr>';
-    const spend = shown.filter(t => t.amount < 0).reduce((s, t) => s + Number(t.amount), 0);
-    const income = shown.filter(t => t.amount > 0).reduce((s, t) => s + Number(t.amount), 0);
-    document.getElementById('txn-summary').textContent = shown.length
-      ? `${shown.length} shown · in £${income.toFixed(2)} · out £${Math.abs(spend).toFixed(2)}`
-      : '';
-    const accounts = [...new Set(txns.map(t => t.account_name))];
-    const sel = document.getElementById('txn-account-filter');
-    const current = sel.value;
-    sel.innerHTML = '<option value="">All accounts</option>' +
-      accounts.map(a => `<option${a === current ? ' selected' : ''}>${a}</option>`).join('');
-    sel.onchange = refreshBanking;
+    view.innerHTML = await fn();
   } catch (e) {
-    document.getElementById('txns').innerHTML =
-      `<tr><td class="muted">Could not load transactions: ${e.message}</td></tr>`;
+    view.innerHTML = card(`<p class="muted">Couldn't load this screen — ${esc(e.message)}.</p>`);
   }
 }
-async function importCsv() {
-  const f = document.getElementById('csv-file').files[0];
-  const note = document.getElementById('csv-note');
-  if (!f) { note.textContent = 'Choose a CSV file first.'; return; }
-  const fd = new FormData();
-  fd.append('account_id', document.getElementById('csv-account').value);
-  fd.append('file', f);
-  note.textContent = 'Importing…';
-  const r = await fetch('/api/import/csv', { method: 'POST', body: fd,
-    headers: { authorization: 'Bearer ' + token } });
-  const body = await r.json();
-  if (!r.ok) { note.textContent = 'Import failed: ' + (body.detail || r.status); return; }
-  note.textContent = `Imported ${body.imported} transactions` +
-    (body.duplicates_skipped ? `, ${body.duplicates_skipped} duplicates skipped` : '') +
-    (body.warnings.length ? ` — ${body.warnings.length} rows skipped (bad date/amount)` : '');
-  refreshBanking();
+window.addEventListener("hashchange", render);
+
+/* ============================== Home ============================== */
+
+async function renderHome() {
+  const h = await api("/home");
+  const nw = h.net_worth || {};
+  const monthSpend = Number(h.month_spend ?? 0);
+  const baseline = Number(h.baseline_spend ?? 0);
+  const pct = baseline > 0 ? ((monthSpend - baseline) / baseline) * 100 : null;
+  const spendKind = pct == null ? "muted" : (pct > 0 ? "bad" : "good");
+
+  const movers = (h.top_movers || []).map(m => `
+    <tr>
+      <td>${esc(m.category || m.name || "—")}</td>
+      <td class="right">${gbp(m.this_month ?? m.amount_gbp ?? 0, 2)}</td>
+      <td class="right">${m.delta != null ? badge((m.delta > 0 ? "+" : "") + Number(m.delta).toFixed(0), m.delta > 0 ? "bad" : "good") : "—"}</td>
+    </tr>`).join("");
+
+  const renewals = (h.upcoming_renewals || []).map(r => {
+    const days = r.days ?? (r.renewal_date ? daysUntil(r.renewal_date) : null);
+    const kind = days == null ? "muted" : (days <= 14 ? "bad" : days <= 30 ? "warn" : "info");
+    return `<tr>
+      <td>${esc(r.provider || "—")} <span class="muted small">${esc(r.kind || "")}</span></td>
+      <td>${fdate(r.renewal_date)}</td>
+      <td class="right">${r.premium != null ? gbp(r.premium, 2) : "—"}</td>
+      <td class="right">${days != null ? badge(days + "d", kind) : "—"}</td>
+    </tr>`;
+  }).join("");
+
+  const staleAssets = h.stale_assets || [];
+  const uncategorised = h.uncategorised ?? h.uncategorised_count ?? 0;
+  const insightsPreview = h.insights_preview || [];
+
+  return `
+    <div class="grid grid-2">
+      ${card(`
+        <h2>Net worth</h2>
+        <div class="big">${gbp(nw.total_gbp ?? 0)}</div>
+        <div class="pill-list" style="margin-top:10px">
+          ${(nw.by_member || []).map(m => `<span class="badge badge-muted">${esc(m.name)}: ${gbp(m.net_worth_gbp, 0)}</span>`).join("") || `<span class="muted small">No members yet.</span>`}
+        </div>
+      `)}
+      ${card(`
+        <h2>This month's spend</h2>
+        <div class="big">${gbp(monthSpend)}</div>
+        <p class="muted">vs baseline ${gbp(baseline)}
+          ${pct != null ? badge((pct > 0 ? "+" : "") + pct.toFixed(0) + "%", spendKind) : ""}
+        </p>
+      `)}
+    </div>
+
+    ${uncategorised > 0 ? `<div class="nudge"><span class="msg">🔎 <b>${uncategorised}</b> transactions need a category.</span><a href="#review"><button class="small">Review queue →</button></a></div>` : ""}
+    ${staleAssets.length ? `<div class="nudge info"><span class="msg">📉 <b>${staleAssets.length}</b> asset${staleAssets.length === 1 ? "" : "s"} need a fresh valuation (${esc(staleAssets.slice(0, 3).map(a => a.name).join(", "))}${staleAssets.length > 3 ? "…" : ""}).</span><a href="#assets"><button class="small">Update →</button></a></div>` : ""}
+
+    <div class="grid grid-2">
+      ${card(`
+        <h2>Top movers this month</h2>
+        ${movers ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th class="right">Spend</th><th class="right">Change</th></tr></thead><tbody>${movers}</tbody></table></div>` : emptyRow("No spending movement yet.")}
+      `)}
+      ${card(`
+        <h2>Upcoming renewals</h2>
+        ${renewals ? `<div class="table-wrap"><table><thead><tr><th>Policy</th><th>Renews</th><th class="right">Premium</th><th class="right">Due</th></tr></thead><tbody>${renewals}</tbody></table></div>` : emptyRow("Nothing renewing soon.")}
+      `)}
+    </div>
+
+    ${card(`
+      <div class="spread"><h2>Insights</h2><a href="#insights" class="small">See all →</a></div>
+      ${insightsPreview.length ? insightsPreview.slice(0, 5).map(i => `
+        <div class="row" style="justify-content:space-between">
+          <span>${severityBadge(i.severity)} ${esc(i.title)}</span>
+          ${i.est_saving_gbp != null ? `<span class="muted small">save ~${gbp(i.est_saving_gbp, 0)}</span>` : ""}
+        </div>`).join("") : emptyRow("No open insights right now.")}
+    `)}
+  `;
 }
-renderAuth();
+
+/* ============================== Transactions ============================== */
+
+let txnFilters = { account_id: "", category_id: "", member_id: "", uncategorised: false, q: "" };
+
+async function renderTxns() {
+  const params = new URLSearchParams({ limit: "150" });
+  if (txnFilters.account_id) params.set("account_id", txnFilters.account_id);
+  if (txnFilters.category_id) params.set("category_id", txnFilters.category_id);
+  if (txnFilters.member_id) params.set("member_id", txnFilters.member_id);
+  if (txnFilters.uncategorised) params.set("uncategorised", "true");
+  if (txnFilters.q) params.set("q", txnFilters.q);
+
+  let txns = [];
+  let loadError = "";
+  try { txns = await api("/transactions?" + params.toString()); }
+  catch (e) { loadError = e.message; }
+
+  const rows = (txns || []).map(t => `
+    <tr>
+      <td class="muted">${fdate(t.posted_at)}</td>
+      <td>${esc(t.description)}${t.merchant ? `<div class="muted small">${esc(t.merchant)}</div>` : ""}</td>
+      <td class="muted">${esc(t.account_name || "")}</td>
+      <td>${t.category_name || categoryName(t.category_id) ? esc(t.category_name || categoryName(t.category_id)) : `<span class="muted">Uncategorised</span>`}</td>
+      <td class="muted">${t.member_name || "—"}</td>
+      <td class="right ${Number(t.amount) < 0 ? "amt-neg" : "amt-pos"}">${gbp(t.amount, 2)}</td>
+    </tr>`).join("");
+
+  return `
+    ${card(`
+      <div class="spread"><h2>Import a statement</h2></div>
+      <div class="row">
+        <input type="file" id="csv-file" accept=".csv,.pdf,text/csv,application/pdf">
+        <select id="csv-account">${accountOptions(null, ["current", "savings", "credit_card"])}</select>
+        <button onclick="importCsv()">Import bank statement</button>
+      </div>
+      <p class="muted small" id="csv-note">CSV exports and text-based PDF statements from most UK banks are auto-detected. Re-importing the same file never duplicates.</p>
+      <hr class="hr">
+      <div class="row">
+        <input type="file" id="inv-file" accept=".csv,.pdf,text/csv,application/pdf">
+        <select id="inv-account">${accountOptions(null, INVESTMENT_TYPES)}</select>
+        <button class="secondary" onclick="importInvestments()">Import HL / Nutmeg statement</button>
+      </div>
+      <p class="muted small" id="inv-note">Hargreaves Lansdown and Nutmeg holdings or transaction exports.</p>
+    `)}
+    ${card(`
+      <div class="spread"><h2>Transactions</h2></div>
+      <div class="row">
+        <select id="f-account" onchange="txnFilters.account_id=this.value;renderTxnsInto()"><option value="">All accounts</option>${accountOptions(txnFilters.account_id)}</select>
+        <select id="f-category" onchange="txnFilters.category_id=this.value;renderTxnsInto()"><option value="">All categories</option>${categoryOptions(txnFilters.category_id, false)}</select>
+        <select id="f-member" onchange="txnFilters.member_id=this.value;renderTxnsInto()">${memberOptions(txnFilters.member_id).replace("— none —", "All members")}</select>
+        <input id="f-q" placeholder="Search description…" value="${esc(txnFilters.q)}" onkeydown="if(event.key==='Enter'){txnFilters.q=this.value;renderTxnsInto()}">
+        <label class="check"><input type="checkbox" id="f-uncat" ${txnFilters.uncategorised ? "checked" : ""} onchange="txnFilters.uncategorised=this.checked;renderTxnsInto()"> uncategorised only</label>
+      </div>
+      ${loadError ? emptyRow("Couldn't load transactions — " + loadError) :
+        rows ? `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Account</th><th>Category</th><th>Member</th><th class="right">Amount</th></tr></thead><tbody>${rows}</tbody></table></div>`
+             : emptyRow("No transactions match these filters.")}
+    `)}
+  `;
+}
+async function renderTxnsInto() { el("view").innerHTML = await renderTxns(); }
+
+async function importCsv() {
+  const f = el("csv-file").files[0];
+  const note = el("csv-note");
+  if (!f) { note.textContent = "Choose a file first."; return; }
+  const fd = new FormData();
+  fd.append("account_id", el("csv-account").value);
+  fd.append("file", f);
+  note.textContent = "Importing…";
+  try {
+    const body = await api("/import/csv", { method: "POST", body: fd });
+    note.textContent = `Imported ${body.imported} transactions` +
+      (body.duplicates_skipped ? `, ${body.duplicates_skipped} duplicates skipped` : "") +
+      (body.warnings?.length ? ` — ${body.warnings.length} rows skipped` : "");
+    renderTxnsInto();
+  } catch (e) { note.textContent = "Import failed: " + e.message; }
+}
+
+async function importInvestments() {
+  const f = el("inv-file").files[0];
+  const note = el("inv-note");
+  if (!f) { note.textContent = "Choose a file first."; return; }
+  const fd = new FormData();
+  fd.append("account_id", el("inv-account").value);
+  fd.append("file", f);
+  note.textContent = "Importing…";
+  try {
+    const body = await api("/import/investments", { method: "POST", body: fd });
+    note.textContent = `Imported ${body.imported ?? body.row_count ?? "holdings"}` +
+      (body.warnings?.length ? ` — ${body.warnings.length} warning(s)` : "");
+    renderTxnsInto();
+  } catch (e) { note.textContent = "Import failed: " + e.message; }
+}
+
+/* ============================== Review queue ============================== */
+
+async function renderReview() {
+  let queue = [], loadError = "";
+  try { queue = await api("/categorise/review?limit=100"); }
+  catch (e) { loadError = e.message; }
+
+  const rows = (queue || []).map(t => `
+    <tr>
+      <td class="muted">${fdate(t.posted_at)}</td>
+      <td>${esc(t.description)}${t.merchant ? `<div class="muted small">${esc(t.merchant)}</div>` : ""}</td>
+      <td class="muted">${esc(t.account_name || "")}</td>
+      <td class="right">${gbp(t.amount, 2)}</td>
+      <td><select id="cat-${t.id}">${categoryOptions(null)}</select></td>
+      <td><select id="mem-${t.id}">${memberOptions(null)}</select></td>
+      <td><input id="tag-${t.id}" placeholder="activity (optional)" list="activity-tags" style="width:120px"></td>
+      <td><button class="small" onclick="saveReview('${t.id}')">Save</button></td>
+    </tr>`).join("");
+
+  return `
+    ${card(`
+      <div class="spread">
+        <h2>Review queue</h2>
+        <button class="secondary" onclick="applyRules()">Apply rules to all</button>
+      </div>
+      <p class="muted">Pick a category (and optionally who it belongs to, or a kids' activity tag) for each uncategorised transaction.</p>
+      <div id="review-note" class="muted small"></div>
+      ${loadError ? emptyRow("Couldn't load review queue — " + loadError) :
+        rows ? `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="right">Amount</th><th>Category</th><th>Member</th><th>Activity</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+             : emptyRow("Nothing to review — everything is categorised. 🎉")}
+      <datalist id="activity-tags">
+        <option value="swimming"><option value="piano"><option value="football">
+        <option value="gymnastics"><option value="dance">
+      </datalist>
+    `)}
+  `;
+}
+
+async function saveReview(id) {
+  const category_id = el("cat-" + id).value;
+  const member_id = el("mem-" + id).value || null;
+  const activity_tag = el("tag-" + id).value.trim() || null;
+  if (!category_id) { el("review-note").textContent = "Pick a category first."; return; }
+  try {
+    await api(`/transactions/${id}`, { method: "PATCH", body: JSON.stringify({ category_id, member_id, activity_tag }) });
+    el("view").innerHTML = await renderReview();
+  } catch (e) { el("review-note").textContent = "Couldn't save — " + e.message; }
+}
+
+async function applyRules() {
+  const note = el("review-note");
+  note.textContent = "Applying rules…";
+  try {
+    const res = await api("/categorise/apply", { method: "POST", body: JSON.stringify({}) });
+    note.textContent = `Auto-categorised ${res.updated ?? res.count ?? 0} transaction(s).`;
+    el("view").innerHTML = await renderReview();
+  } catch (e) { note.textContent = "Couldn't apply rules — " + e.message; }
+}
+
+/* ============================== Budgets ============================== */
+
+let budgetMonth = monthISO();
+
+async function renderBudgets() {
+  let rows = [], loadError = "";
+  try { rows = await api("/budgets?month=" + budgetMonth); }
+  catch (e) { loadError = e.message; }
+
+  const body = (rows || []).map(r => {
+    const budgetAmt = Number(r.amount_gbp || 0);
+    const spent = Number(r.spent ?? r.spent_gbp ?? 0);
+    const pct = budgetAmt > 0 ? Math.min(150, (spent / budgetAmt) * 100) : (spent > 0 ? 100 : 0);
+    const kind = budgetAmt === 0 ? "" : (spent > budgetAmt ? "bad" : pct >= 85 ? "warn" : "good");
+    return `
+      <tr>
+        <td>${esc(r.category_name || r.category)}</td>
+        <td class="right">${gbp(spent, 2)}</td>
+        <td class="right">
+          <input type="number" step="0.01" min="0" style="width:100px;text-align:right" id="bud-${r.category_id}" value="${budgetAmt || ""}" placeholder="0">
+        </td>
+        <td class="right ${spent > budgetAmt && budgetAmt > 0 ? "amt-neg" : ""}">${budgetAmt ? gbp(budgetAmt - spent, 2) : "—"}</td>
+        <td style="min-width:120px"><div class="bar ${kind}"><div style="width:${Math.min(100, pct)}%"></div></div></td>
+        <td><button class="small" onclick="saveBudget('${r.category_id}')">Save</button></td>
+      </tr>`;
+  }).join("");
+
+  return `
+    ${card(`
+      <div class="spread">
+        <h2>Budgets</h2>
+        <input type="month" value="${budgetMonth}" onchange="budgetMonth=this.value;renderBudgetsInto()">
+      </div>
+      <div id="budgets-note" class="muted small"></div>
+      ${loadError ? emptyRow("Couldn't load budgets — " + loadError) :
+        body ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th class="right">Spent</th><th class="right">Budget (£)</th><th class="right">Remaining</th><th>Progress</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`
+             : emptyRow("No expense categories to budget yet.")}
+    `)}
+  `;
+}
+async function renderBudgetsInto() { el("view").innerHTML = await renderBudgets(); }
+
+async function saveBudget(categoryId) {
+  const note = el("budgets-note");
+  const amount_gbp = Number(el("bud-" + categoryId).value || 0);
+  try {
+    await api("/budgets", { method: "PUT", body: JSON.stringify({ category_id: categoryId, year_month: budgetMonth, amount_gbp }) });
+    note.textContent = "Saved.";
+    renderBudgetsInto();
+  } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+/* ============================== Assets ============================== */
+
+async function renderAssets() {
+  let assets = [], loadError = "";
+  try { assets = await api("/assets"); }
+  catch (e) { loadError = e.message; }
+
+  const rows = (assets || []).map(a => {
+    const stale = a.is_stale ?? a.stale ?? (!a.latest_as_of);
+    return `
+      <tr>
+        <td>${esc(a.name)}</td>
+        <td class="muted">${esc(a.type)}</td>
+        <td class="muted">${(a.owners || []).map(esc).join(", ") || "—"}</td>
+        <td class="right">${a.latest_value_gbp != null ? gbp(a.latest_value_gbp, 0) : "—"}</td>
+        <td class="muted">${fdate(a.latest_as_of || a.last_valuation)}</td>
+        <td>${stale ? badge("stale", "warn") : badge("fresh", "good")}</td>
+      </tr>`;
+  }).join("");
+
+  return `
+    ${card(`
+      <h2>Record a valuation</h2>
+      <div class="form-grid">
+        <div class="field"><label>Account</label><select id="v-account">${accountOptions(null, ASSET_TYPES)}</select></div>
+        <div class="field"><label>Value (£)</label><input id="v-value" type="number" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>As of</label><input id="v-date" type="date" value="${todayISO()}"></div>
+        <div class="field"><label>Note</label><input id="v-note" placeholder="optional"></div>
+      </div>
+      <button onclick="addValuation()">Save valuation</button>
+      <span id="assets-note" class="muted small" style="margin-left:8px"></span>
+    `)}
+    ${card(`
+      <h2>Assets &amp; liabilities</h2>
+      ${loadError ? emptyRow("Couldn't load assets — " + loadError) :
+        rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Owner(s)</th><th class="right">Latest value</th><th>As of</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`
+             : emptyRow("No asset accounts yet — add one under Accounts.")}
+    `)}
+  `;
+}
+
+async function addValuation() {
+  const note = el("assets-note");
+  try {
+    await api("/valuations", { method: "POST", body: JSON.stringify({
+      account_id: el("v-account").value,
+      as_of: el("v-date").value || todayISO(),
+      value_gbp: Number(el("v-value").value || 0),
+      note: el("v-note").value.trim() || null,
+    }) });
+    note.textContent = "Saved.";
+    el("view").innerHTML = await renderAssets();
+  } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+/* ============================== Policies ============================== */
+
+async function renderPolicies() {
+  let policies = [], loadError = "";
+  try { policies = await api("/policies"); }
+  catch (e) { loadError = e.message; }
+
+  const rows = (policies || []).map(p => {
+    const days = p.renewal_date ? daysUntil(p.renewal_date) : null;
+    const kind = days == null ? "muted" : days <= 14 ? "bad" : days <= 45 ? "warn" : "good";
+    return `
+      <tr>
+        <td>${esc(p.provider)}<div class="muted small">${esc(p.kind)}</div></td>
+        <td class="muted">${p.policyholder_member_id ? esc((S.members.find(m => m.id === p.policyholder_member_id) || {}).name || "") : "—"}</td>
+        <td class="right">${p.cover_amount != null ? gbp(p.cover_amount, 0) : "—"}</td>
+        <td class="right">${gbp(p.premium, 2)}<div class="muted small">${esc(p.premium_freq)}</div></td>
+        <td>${fdate(p.renewal_date)} ${days != null ? badge(days + "d", kind) : ""}</td>
+        <td>${p.active ? badge("active", "good") : badge("inactive", "muted")}</td>
+        <td><button class="small secondary" onclick="editPolicy('${p.id}')">Edit</button></td>
+      </tr>`;
+  }).join("");
+
+  return `
+    ${card(`
+      <h2 id="policy-form-title">Add a policy</h2>
+      <input type="hidden" id="p-id">
+      <div class="form-grid">
+        <div class="field"><label>Kind</label><select id="p-kind">${POLICY_KINDS.map(k => `<option value="${k}">${esc(k.replace(/_/g, " "))}</option>`).join("")}</select></div>
+        <div class="field"><label>Provider</label><input id="p-provider" placeholder="e.g. Aviva"></div>
+        <div class="field"><label>Policyholder</label><select id="p-holder">${memberOptions(null)}</select></div>
+        <div class="field"><label>Cover amount (£)</label><input id="p-cover" type="number" step="1"></div>
+        <div class="field"><label>Premium (£)</label><input id="p-premium" type="number" step="0.01"></div>
+        <div class="field"><label>Frequency</label><select id="p-freq"><option value="monthly">monthly</option><option value="annual">annual</option></select></div>
+        <div class="field"><label>Start date</label><input id="p-start" type="date"></div>
+        <div class="field"><label>Renewal date</label><input id="p-renewal" type="date"></div>
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="p-active" checked> active</label>
+        <button onclick="savePolicy()">Save policy</button>
+        <button class="ghost" onclick="resetPolicyForm()" id="p-cancel" style="display:none">Cancel edit</button>
+        <span id="policies-note" class="muted small"></span>
+      </div>
+    `)}
+    ${card(`
+      <h2>Policy registry</h2>
+      ${loadError ? emptyRow("Couldn't load policies — " + loadError) :
+        rows ? `<div class="table-wrap"><table><thead><tr><th>Provider</th><th>Holder</th><th class="right">Cover</th><th class="right">Premium</th><th>Renewal</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+             : emptyRow("No policies recorded yet.")}
+    `)}
+  `;
+}
+
+let _policiesCache = [];
+async function editPolicy(id) {
+  try {
+    if (!_policiesCache.length) _policiesCache = await api("/policies");
+    const p = _policiesCache.find(x => x.id === id);
+    if (!p) return;
+    el("policy-form-title").textContent = "Edit policy";
+    el("p-id").value = p.id;
+    el("p-kind").value = p.kind;
+    el("p-provider").value = p.provider || "";
+    el("p-holder").value = p.policyholder_member_id || "";
+    el("p-cover").value = p.cover_amount ?? "";
+    el("p-premium").value = p.premium ?? "";
+    el("p-freq").value = p.premium_freq || "monthly";
+    el("p-start").value = p.start_date || "";
+    el("p-renewal").value = p.renewal_date || "";
+    el("p-active").checked = !!p.active;
+    el("p-cancel").style.display = "inline-block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (e) { el("policies-note").textContent = e.message; }
+}
+function resetPolicyForm() {
+  el("policy-form-title").textContent = "Add a policy";
+  ["p-id", "p-provider", "p-cover", "p-premium", "p-start", "p-renewal"].forEach(id => el(id).value = "");
+  el("p-holder").value = ""; el("p-active").checked = true;
+  el("p-cancel").style.display = "none";
+}
+
+async function savePolicy() {
+  const note = el("policies-note");
+  const id = el("p-id").value;
+  const payload = {
+    kind: el("p-kind").value,
+    provider: el("p-provider").value.trim(),
+    policyholder_member_id: el("p-holder").value || null,
+    cover_amount: el("p-cover").value ? Number(el("p-cover").value) : null,
+    premium: Number(el("p-premium").value || 0),
+    premium_freq: el("p-freq").value,
+    start_date: el("p-start").value || null,
+    renewal_date: el("p-renewal").value || null,
+    active: el("p-active").checked,
+  };
+  if (!payload.provider) { note.textContent = "Provider is required."; return; }
+  try {
+    if (id) await api(`/policies/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+    else await api("/policies", { method: "POST", body: JSON.stringify(payload) });
+    note.textContent = "Saved.";
+    _policiesCache = [];
+    resetPolicyForm();
+    el("view").innerHTML = await renderPolicies();
+  } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+/* ============================== Payslips ============================== */
+
+let payslipTab = "pending_review";
+
+async function renderPayslips() {
+  let list = [], loadError = "";
+  try { list = await api("/payslips?status=" + payslipTab); }
+  catch (e) { loadError = e.message; }
+
+  const items = (list || []).map(p => payslipTab === "pending_review" ? pendingPayslipRow(p) : confirmedPayslipRow(p)).join("");
+
+  return `
+    ${card(`
+      <h2>Upload a payslip</h2>
+      <div class="row">
+        <select id="pay-member">${memberOptions(null, false)}</select>
+        <input type="file" id="pay-file" accept="application/pdf,.pdf">
+        <button onclick="uploadPayslip()">Upload &amp; parse</button>
+      </div>
+      <p class="muted small" id="pay-upload-note">Text-based PDF payslips are parsed automatically; low-confidence extractions land in the review list below for correction.</p>
+    `)}
+    ${card(`
+      <div class="tabs">
+        <button class="${payslipTab === "pending_review" ? "active" : ""}" onclick="payslipTab='pending_review';renderPayslipsInto()">Pending review</button>
+        <button class="${payslipTab === "confirmed" ? "active" : ""}" onclick="payslipTab='confirmed';renderPayslipsInto()">Confirmed</button>
+        <button class="${payslipTab === "rejected" ? "active" : ""}" onclick="payslipTab='rejected';renderPayslipsInto()">Rejected</button>
+      </div>
+      ${loadError ? emptyRow("Couldn't load payslips — " + loadError) : (items || emptyRow("Nothing here yet."))}
+    `)}
+  `;
+}
+async function renderPayslipsInto() { el("view").innerHTML = await renderPayslips(); }
+
+function confirmedPayslipRow(p) {
+  return `
+    <div class="row spread" style="border-bottom:1px solid var(--border);padding:10px 0">
+      <div>
+        <b>${esc(p.employer || "Payslip")}</b> · ${fdate(p.pay_date)}
+        <div class="muted small">${esc((S.members.find(m => m.id === p.member_id) || {}).name || "")} — net ${gbp(p.net_pay, 2)}</div>
+      </div>
+      <span class="badge badge-good">confirmed</span>
+    </div>`;
+}
+
+const PAYSLIP_FIELDS = [
+  ["employer", "Employer", "text"], ["pay_date", "Pay date", "date"],
+  ["period_start", "Period start", "date"], ["period_end", "Period end", "date"],
+  ["tax_code", "Tax code", "text"], ["gross_pay", "Gross pay (£)", "number"],
+  ["taxable_pay", "Taxable pay (£)", "number"], ["income_tax", "Income tax (£)", "number"],
+  ["employee_ni", "Employee NI (£)", "number"], ["employer_ni", "Employer NI (£)", "number"],
+  ["pension_employee", "Pension (employee) (£)", "number"], ["pension_employer", "Pension (employer) (£)", "number"],
+  ["student_loan", "Student loan (£)", "number"], ["net_pay", "Net pay (£)", "number"],
+];
+
+function pendingPayslipRow(p) {
+  const issues = (p.validation && p.validation.issues) || [];
+  return `
+    <div class="card" style="margin-bottom:12px;box-shadow:none;border-color:var(--border)">
+      <div class="spread">
+        <h3>${esc(p.employer || "Payslip")} — ${fdate(p.pay_date)}</h3>
+        <span class="muted small">parsed via ${esc(p.parse_method || "?")} · confidence ${p.parse_confidence != null ? Math.round(p.parse_confidence * 100) + "%" : "—"}</span>
+      </div>
+      ${issues.length ? `<p class="muted small">⚠ ${esc(issues.join("; "))}</p>` : ""}
+      <div class="form-grid">
+        ${PAYSLIP_FIELDS.map(([key, label, type]) => `
+          <div class="field"><label>${esc(label)}</label>
+            <input id="ps-${p.id}-${key}" type="${type}" step="${type === "number" ? "0.01" : ""}" value="${esc(p[key] ?? "")}">
+          </div>`).join("")}
+        <div class="field"><label>Salary account</label><select id="ps-${p.id}-salary">${accountOptions(null, ["current", "savings"])}</select></div>
+        <div class="field"><label>Pension account (optional)</label><select id="ps-${p.id}-pension"><option value="">— none —</option>${accountOptions(null, ["sipp", "workplace_pension"])}</select></div>
+      </div>
+      <div class="row">
+        <button onclick="confirmPayslip('${p.id}')">Confirm &amp; post</button>
+        <button class="danger" onclick="rejectPayslip('${p.id}')">Reject</button>
+        <span id="ps-note-${p.id}" class="muted small"></span>
+      </div>
+    </div>`;
+}
+
+async function uploadPayslip() {
+  const note = el("pay-upload-note");
+  const f = el("pay-file").files[0];
+  if (!f) { note.textContent = "Choose a PDF first."; return; }
+  const fd = new FormData();
+  fd.append("member_id", el("pay-member").value);
+  fd.append("file", f);
+  note.textContent = "Uploading &amp; parsing…";
+  try {
+    await api("/payslips/upload", { method: "POST", body: fd });
+    payslipTab = "pending_review";
+    el("view").innerHTML = await renderPayslips();
+  } catch (e) { note.textContent = "Upload failed: " + e.message; }
+}
+
+function _payslipEdits(id) {
+  const out = {};
+  for (const [key, , type] of PAYSLIP_FIELDS) {
+    const v = el(`ps-${id}-${key}`).value;
+    out[key] = type === "number" ? (v === "" ? null : Number(v)) : (v || null);
+  }
+  return out;
+}
+
+async function confirmPayslip(id) {
+  const note = el("ps-note-" + id);
+  const salary_account_id = el(`ps-${id}-salary`).value;
+  const pension_account_id = el(`ps-${id}-pension`).value || null;
+  try {
+    await api(`/payslips/${id}`, { method: "PATCH", body: JSON.stringify({ ..._payslipEdits(id), pension_account_id }) });
+    await api(`/payslips/${id}/confirm`, { method: "POST", body: JSON.stringify({ salary_account_id, pension_account_id }) });
+    el("view").innerHTML = await renderPayslips();
+  } catch (e) { note.textContent = "Couldn't confirm — " + e.message; }
+}
+
+async function rejectPayslip(id) {
+  if (!confirm("Reject this payslip? It will not post any ledger entries.")) return;
+  try {
+    await api(`/payslips/${id}/reject`, { method: "POST", body: JSON.stringify({}) });
+    el("view").innerHTML = await renderPayslips();
+  } catch (e) { el("ps-note-" + id).textContent = "Couldn't reject — " + e.message; }
+}
+
+/* ============================== Trends ============================== */
+
+function lineChart(points, { width = 640, height = 180, pad = 28 } = {}) {
+  if (!points.length) return emptyRow("Not enough history yet.");
+  const values = points.map(p => p.value);
+  const min = Math.min(0, ...values), max = Math.max(...values, min + 1);
+  const x = i => pad + (i / Math.max(1, points.length - 1)) * (width - pad * 2);
+  const y = v => height - pad - ((v - min) / (max - min)) * (height - pad * 2);
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
+  const area = `${path} L${x(points.length - 1).toFixed(1)},${(height - pad).toFixed(1)} L${x(0).toFixed(1)},${(height - pad).toFixed(1)} Z`;
+  return `
+    <div class="chart-wrap">
+      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+        <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="var(--border)"/>
+        <path d="${area}" fill="var(--good-bg)" stroke="none"/>
+        <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+        <text x="${pad}" y="${pad - 10}" font-size="11" fill="var(--muted)">${esc(points[0].label)}</text>
+        <text x="${width - pad}" y="${pad - 10}" font-size="11" fill="var(--muted)" text-anchor="end">${esc(points[points.length - 1].label)}</text>
+      </svg>
+      <div class="spread"><span class="muted small">${esc(points[0].label)}: ${gbp(points[0].value, 0)}</span><span class="muted small">${esc(points[points.length - 1].label)}: ${gbp(points[points.length - 1].value, 0)}</span></div>
+    </div>`;
+}
+
+function hbarChart(items) {
+  if (!items.length) return emptyRow("No spending in this period.");
+  const max = Math.max(...items.map(i => i.value), 1);
+  return items.map(i => `
+    <div class="hbar-row">
+      <span>${esc(i.label)}</span>
+      <div class="bar"><div style="width:${Math.max(2, (i.value / max) * 100)}%"></div></div>
+      <span class="right">${gbp(i.value, 0)}</span>
+    </div>`).join("");
+}
+
+async function renderTrends() {
+  let nwSeries = [], catSeries = [], err1 = "", err2 = "";
+  try { nwSeries = await api("/trends/networth?days=365"); } catch (e) { err1 = e.message; }
+  try { catSeries = await api("/trends/spend?months=6"); } catch (e) { err2 = e.message; }
+
+  const points = (nwSeries || []).map(p => ({ label: String(p.date || p.month || p.snap_date || ""), value: Number(p.total_gbp ?? p.value_gbp ?? 0) }));
+  const byCat = {};
+  for (const c of (catSeries || [])) {
+    const name = c.category || c.name || "—";
+    byCat[name] = (byCat[name] || 0) + Number(c.amount ?? c.amount_gbp ?? c.total_gbp ?? 0);
+  }
+  const bars = Object.entries(byCat).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 10);
+
+  return `
+    ${card(`<h2>Net worth history</h2>${err1 ? emptyRow("Couldn't load — " + err1) : lineChart(points)}`)}
+    ${card(`<h2>Top spending categories (last 6 months)</h2>${err2 ? emptyRow("Couldn't load — " + err2) : hbarChart(bars)}`)}
+  `;
+}
+
+/* ============================== Export ============================== */
+
+function taxYearOptions() {
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), 3, 6); // 6 Apr
+  const startYear = now >= cutoff ? now.getFullYear() : now.getFullYear() - 1;
+  let opts = "";
+  for (let i = 0; i < 8; i++) {
+    const y = startYear - i;
+    const label = `${y}-${String((y + 1) % 100).padStart(2, "0")}`;
+    opts += `<option value="${label}">${label}</option>`;
+  }
+  return opts;
+}
+
+async function renderExport() {
+  return card(`
+    <h2>Export a tax year</h2>
+    <p class="muted">Download the full ledger — transactions, valuations, payslips, policies, holdings — for a UK tax year (6 Apr – 5 Apr).</p>
+    <div class="row">
+      <select id="exp-year">${taxYearOptions()}</select>
+      <select id="exp-fmt"><option value="json">JSON</option><option value="csv">CSV (zip)</option></select>
+      <button onclick="downloadExport()">Download</button>
+      <span id="exp-note" class="muted small"></span>
+    </div>
+  `);
+}
+
+async function downloadExport() {
+  const note = el("exp-note");
+  const ty = el("exp-year").value, fmt = el("exp-fmt").value;
+  note.textContent = "Preparing download…";
+  try {
+    const { blob, filename } = await apiBlob(`/export/${encodeURIComponent(ty)}?format=${fmt}`);
+    triggerDownload(blob, filename || `family-budget-${ty}.${fmt === "json" ? "json" : "zip"}`);
+    note.textContent = "Downloaded.";
+  } catch (e) { note.textContent = "Export failed: " + e.message; }
+}
+
+/* ============================== Members ============================== */
+
+async function renderMembers() {
+  const rows = S.members.map(m => `
+    <tr><td>${esc(m.name)}</td><td class="muted">${m.is_child ? "child" : "adult"}</td><td class="muted">${fdate(m.date_of_birth)}</td></tr>
+  `).join("");
+  return card(`
+    <h2>Household members</h2>
+    ${rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Date of birth</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyRow("No members yet.")}
+    <hr class="hr">
+    <div class="row">
+      <input id="m-name" placeholder="Name">
+      <input id="m-dob" type="date">
+      <label class="check"><input type="checkbox" id="m-child"> child</label>
+      <button onclick="addMember()">Add member</button>
+      <span id="members-note" class="muted small"></span>
+    </div>
+  `);
+}
+
+async function addMember() {
+  const note = el("members-note");
+  const name = el("m-name").value.trim();
+  if (!name) { note.textContent = "Name is required."; return; }
+  try {
+    await api("/members", { method: "POST", body: JSON.stringify({
+      name, is_child: el("m-child").checked, date_of_birth: el("m-dob").value || null,
+    }) });
+    S.members = await api("/members");
+    el("view").innerHTML = await renderMembers();
+  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
+}
+
+/* ============================== Accounts ============================== */
+
+async function renderAccounts() {
+  const rows = S.accounts.map(a => `
+    <tr>
+      <td>${esc(a.name)}</td><td class="muted">${esc(a.type)}</td>
+      <td class="muted">${(a.owners || []).map(o => (S.members.find(m => m.id === o.member_id) || {}).name).filter(Boolean).map(esc).join(", ") || "—"}</td>
+      <td class="muted">${esc(a.currency)}</td>
+    </tr>`).join("");
+  return card(`
+    <h2>Accounts</h2>
+    ${rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Owner(s)</th><th>Currency</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyRow("No accounts yet.")}
+    <hr class="hr">
+    <div class="row">
+      <input id="a-name" placeholder="Account name">
+      <select id="a-type">${ACCOUNT_TYPES.map(t => `<option value="${t}">${t}</option>`).join("")}</select>
+      <select id="a-owner">${memberOptions(null, false)}</select>
+      <label class="check"><input type="checkbox" id="a-liability"> liability</label>
+      <button onclick="addAccount()">Add account</button>
+      <span id="accounts-note" class="muted small"></span>
+    </div>
+  `);
+}
+
+async function addAccount() {
+  const note = el("accounts-note");
+  const name = el("a-name").value.trim();
+  if (!name) { note.textContent = "Name is required."; return; }
+  try {
+    await api("/accounts", { method: "POST", body: JSON.stringify({
+      name, type: el("a-type").value, owner_member_id: el("a-owner").value,
+      is_liability: el("a-liability").checked,
+    }) });
+    S.accounts = await api("/accounts");
+    el("view").innerHTML = await renderAccounts();
+  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
+}
+
+/* ============================== Banking ============================== */
+
+async function renderBanking() {
+  let status = { configured: false, connections: [] }, loadError = "";
+  try { status = await api("/banking/status"); }
+  catch (e) { loadError = e.message; }
+
+  const conns = (status.connections || []).map(c => `
+    <tr>
+      <td>${esc(c.display_name)}<div class="muted small">${esc(c.aspsp_name || "")}</div></td>
+      <td class="muted">${fdate(c.last_sync_at)} ${c.last_sync_status ? badge(c.last_sync_status, c.last_sync_status === "ok" ? "good" : "bad") : ""}</td>
+      <td>${fdate(c.consent_expires_at)} ${c.expiring_soon ? badge("expiring soon", "warn") : ""}</td>
+    </tr>`).join("");
+
+  return `
+    ${card(`
+      <div class="spread"><h2>Bank connections</h2><button onclick="bankingSync()">Sync now</button></div>
+      ${loadError ? emptyRow("Couldn't load banking status — " + loadError) :
+        !status.configured ? emptyRow("Open Banking isn't configured on this server yet.") :
+        conns ? `<div class="table-wrap"><table><thead><tr><th>Bank</th><th>Last sync</th><th>Consent</th></tr></thead><tbody>${conns}</tbody></table></div>` : emptyRow("No banks connected yet.")}
+      <div id="banking-note" class="muted small"></div>
+    `)}
+    ${status.configured ? card(`
+      <h2>Connect a new bank</h2>
+      <div class="row">
+        <input id="bank-country" value="GB" style="width:70px" maxlength="2">
+        <button class="secondary" onclick="loadBanks()">Find banks</button>
+      </div>
+      <div id="bank-list" class="row"></div>
+    `) : ""}
+  `;
+}
+
+async function bankingSync() {
+  const note = el("banking-note");
+  note.textContent = "Syncing…";
+  try {
+    await api("/banking/sync", { method: "POST" });
+    note.textContent = "Sync started.";
+    el("view").innerHTML = await renderBanking();
+  } catch (e) { note.textContent = "Sync failed — " + e.message; }
+}
+
+async function loadBanks() {
+  const country = el("bank-country").value.trim() || "GB";
+  const box = el("bank-list");
+  box.innerHTML = `<span class="muted small">Loading banks…</span>`;
+  try {
+    const banks = await api(`/banking/banks?country=${encodeURIComponent(country)}`);
+    const names = (banks || []).map(b => (typeof b === "string" ? b : (b.name || b.aspsp_name)));
+    box.innerHTML = `
+      <select id="bank-select">${names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("")}</select>
+      <button onclick="connectBank('${esc(country)}')">Connect</button>`;
+  } catch (e) { box.innerHTML = `<span class="muted small">Couldn't load banks — ${esc(e.message)}</span>`; }
+}
+
+async function connectBank(country) {
+  try {
+    const res = await api("/banking/connect", { method: "POST", body: JSON.stringify({
+      aspsp_name: el("bank-select").value, country,
+    }) });
+    if (res.url) window.open(res.url, "_blank");
+  } catch (e) { el("banking-note").textContent = "Couldn't start connection — " + e.message; }
+}
+
+/* ============================== Insights ============================== */
+
+async function renderInsights() {
+  let list = [], loadError = "";
+  try { list = await api("/insights?status=open"); }
+  catch (e) { loadError = e.message; }
+
+  const cards = (list || []).map(i => `
+    <div class="card insight-card sev-${i.severity}">
+      <div class="spread">
+        <h3>${severityBadge(i.severity)} ${esc(i.title)}</h3>
+        ${i.est_saving_gbp != null ? `<span class="muted small">save ~${gbp(i.est_saving_gbp, 0)}</span>` : ""}
+      </div>
+      <p>${esc(i.body)}</p>
+      <div class="row">
+        <span class="muted small">${esc(i.kind)} · ${esc(i.source)} · ${fdate(i.created_at)}</span>
+        <button class="small secondary" onclick="setInsight('${i.id}','done')">Mark done</button>
+        <button class="small ghost" onclick="setInsight('${i.id}','dismissed')">Dismiss</button>
+      </div>
+    </div>`).join("");
+
+  return `
+    <div class="spread" style="margin-bottom:12px">
+      <h2>Insights</h2>
+      <button onclick="runInsightRules()">Run rules</button>
+    </div>
+    <div id="insights-note" class="muted small" style="margin-bottom:8px"></div>
+    ${loadError ? emptyRow("Couldn't load insights — " + loadError) : (cards || emptyRow("No open insights right now."))}
+  `;
+}
+
+async function setInsight(id, status) {
+  try {
+    await api(`/insights/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+    el("view").innerHTML = await renderInsights();
+  } catch (e) { el("insights-note").textContent = "Couldn't update — " + e.message; }
+}
+
+async function runInsightRules() {
+  const note = el("insights-note");
+  note.textContent = "Running rules…";
+  try {
+    const res = await api("/insights/run", { method: "POST" });
+    note.textContent = `Created ${res.created ?? 0} new insight(s).`;
+    el("view").innerHTML = await renderInsights();
+  } catch (e) { note.textContent = "Couldn't run rules — " + e.message; }
+}
+
+/* ============================== wire-up ============================== */
+
+el("authLoginBtn").addEventListener("click", doLogin);
+el("authRegisterBtn").addEventListener("click", doRegister);
+el("logoutBtn").addEventListener("click", doLogout);
+el("authPw").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
 </script>
 </body>
 </html>
