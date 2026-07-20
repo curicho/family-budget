@@ -5,7 +5,7 @@ Self-hosted UK household finance platform (see full design doc delivered separat
 - `app/` — Python application: FastAPI api, web (SPA + proxy), worker (cron jobs), migrate, backup
 - `db/schema.sql` — Postgres schema (becomes migration 001 in the image)
 - `helm/family-budget/` — Helm chart
-- `docs/` — Mac mini setup guide, payslip parser spec
+- `docs/` — Mac mini setup guide, payslip parser spec, **HOW-DEPLOYMENT-WORKS.md** (read this to understand push → build → rollout)
 - `Dockerfile`, `.github/workflows/build.yml` — multi-arch image build to GHCR
 
 ## Ship it

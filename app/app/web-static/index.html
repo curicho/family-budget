@@ -149,9 +149,22 @@ async function addValuation() {
   refresh();
 }
 async function refreshBanking() {
+  const note = document.getElementById('banking-note');
+  // Transactions FIRST — never blocked by provider errors
+  try {
+    const txns = await api('/transactions?limit=25');
+    document.getElementById('txns').innerHTML = txns.map(t =>
+      `<tr><td class="muted">${t.posted_at}</td><td>${t.description}</td>` +
+      `<td class="muted">${t.account_name}</td>` +
+      `<td style="text-align:right;color:${t.amount < 0 ? '#e88' : '#8e8'}">${Number(t.amount).toFixed(2)}</td></tr>`
+    ).join('') || '<tr><td class="muted">No transactions yet.</td></tr>';
+  } catch (e) {
+    document.getElementById('txns').innerHTML =
+      `<tr><td class="muted">Could not load transactions: ${e.message}</td></tr>`;
+  }
+  // Provider status/bank list — failures stay in their own lane
   try {
     const st = await api('/banking/status');
-    const note = document.getElementById('banking-note');
     if (!st.configured) {
       note.textContent = 'Enable Banking credentials not configured on the server yet.';
       document.getElementById('bank-list').innerHTML = '';
@@ -165,15 +178,12 @@ async function refreshBanking() {
       document.getElementById('bank-list').innerHTML =
         banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
       window._banksLoaded = true;
+      note.textContent = '';
     }
-    const txns = await api('/transactions?limit=25');
-    document.getElementById('txns').innerHTML = txns.map(t =>
-      `<tr><td class="muted">${t.posted_at}</td><td>${t.description}</td>` +
-      `<td class="muted">${t.account_name}</td>` +
-      `<td style="text-align:right;color:${t.amount < 0 ? '#e88' : '#8e8'}">${Number(t.amount).toFixed(2)}</td></tr>`
-    ).join('') || '<tr><td class="muted">No transactions yet.</td></tr>';
   } catch (e) {
-    document.getElementById('banking-note').textContent = 'Banking: ' + e.message;
+    note.textContent = 'Bank feed unavailable: ' + e.message +
+      ' — statement import below works regardless.';
+    document.getElementById('bank-list').innerHTML = '<option>Bank feed unavailable</option>';
   }
 }
 async function connectBank() {
