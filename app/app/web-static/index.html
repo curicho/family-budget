@@ -3,178 +3,328 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#8B1E3F">
 <title>Family Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f4f1ea;
-  --card: #ffffff;
-  --border: #e6e1d3;
-  --text: #23271f;
-  --muted: #767b70;
-  --accent: #2f6f4f;
+  --paper: #F6F5F7;
+  --ink: #1A1214;
+  --panel: #FFFFFF;
+  --border: #E7E0E3;
+  --muted: #6F6870;
+  --accent: #8B1E3F;
+  --accent-press: #6B1530;
   --accent-ink: #ffffff;
-  --good: #1a7a44;
-  --good-bg: #e7f5ec;
-  --warn: #a3620a;
-  --warn-bg: #fbf0dd;
-  --bad: #b3261e;
-  --bad-bg: #fbe9e7;
-  --info: #2f5f8f;
-  --info-bg: #e9f1f9;
-  --radius: 12px;
-  --shadow: 0 1px 2px rgba(30,30,20,.05), 0 1px 8px rgba(30,30,20,.04);
+  --blush: #F3E4E9;
+  --blush-2: #F8ECF0;
+  --good: #1F7A4D; --good-bg: #E7F5EC;
+  --warn: #A3620A; --warn-bg: #FBF0DD;
+  --bad: #B3261E; --bad-bg: #FBE9E7;
+  --info: #2F5F8F; --info-bg: #E9F1F9;
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(26,18,20,.04), 0 8px 24px rgba(26,18,20,.05);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-ui: "DM Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --nav-h: 62px;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  font: 15px/1.5 -apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font: 15px/1.5 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  background: var(--paper);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3 { font-weight: 650; margin: 0; }
-h1 { font-size: 19px; }
-h2 { font-size: 15px; margin-bottom: 12px; }
-h3 { font-size: 13px; margin-bottom: 8px; }
+h1, h2, h3 { font-weight: 700; margin: 0; font-family: var(--font-ui); letter-spacing: -.01em; }
+h1 { font-size: 22px; }
+h2 { font-size: 15.5px; margin-bottom: 12px; }
+h3 { font-size: 13.5px; margin-bottom: 8px; }
 p { margin: 0 0 8px; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+hr.hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
 /* ---------- auth ---------- */
 .auth-wrap {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background:
+    radial-gradient(720px 420px at 18% -8%, rgba(139,30,63,.16), transparent 60%),
+    radial-gradient(600px 500px at 100% 100%, rgba(139,30,63,.08), transparent 60%),
+    var(--paper);
 }
 .auth-card {
-  width: 100%;
-  max-width: 360px;
-  background: var(--card);
+  width: 100%; max-width: 400px;
+  background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  padding: 28px 24px;
+  padding: 36px 32px;
+  animation: heroRise .5s cubic-bezier(.16,1,.3,1) both;
 }
-.auth-card h1 { margin-bottom: 4px; }
-.auth-card .muted { margin-bottom: 20px; }
+.auth-word { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: -.01em; margin-bottom: 4px; }
+.auth-word .dot { color: var(--accent); }
+.auth-card .tagline { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
 .auth-card input { width: 100%; margin-bottom: 10px; }
-.auth-card .row { flex-direction: column; }
+.auth-card .stack { display: flex; flex-direction: column; gap: 10px; }
 .auth-card button { width: 100%; }
-.auth-card .btn-link { background: none; color: var(--accent); border: none; box-shadow: none; padding: 6px 0; width: auto; }
+.auth-card .btn-link { background: none; color: var(--accent); border: none; box-shadow: none; padding: 8px 0; width: auto; font-weight: 600; }
+#authMsg { min-height: 18px; margin-bottom: 6px; }
 
 /* ---------- app shell ---------- */
 header.topbar {
-  position: sticky; top: 0; z-index: 10;
-  background: var(--card);
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: saturate(180%) blur(10px);
   border-bottom: 1px solid var(--border);
 }
 .topbar-inner {
   max-width: 1180px; margin: 0 auto;
-  display: flex; align-items: center; gap: 16px;
-  padding: 10px 20px;
-  flex-wrap: wrap;
+  display: flex; align-items: center; gap: 18px;
+  padding: 12px 22px;
+  height: var(--nav-h);
 }
-.brand { font-weight: 700; font-size: 16px; white-space: nowrap; }
-nav.nav { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
-nav.nav a {
-  color: var(--muted); font-size: 13px; font-weight: 600;
-  padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+.brand-word { font-family: var(--font-display); font-weight: 700; font-size: 19px; white-space: nowrap; color: var(--ink); }
+.brand-word .dot { color: var(--accent); }
+.brand-link { display: flex; align-items: center; }
+nav.nav { display: flex; gap: 2px; flex: 1; }
+nav.nav a, .bottom-nav a {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--muted); font-size: 13.5px; font-weight: 600;
+  padding: 8px 13px; border-radius: 999px; white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
 }
-nav.nav a:hover { background: var(--bg); text-decoration: none; color: var(--text); }
+nav.nav a:hover { background: var(--blush-2); text-decoration: none; color: var(--ink); }
 nav.nav a.active { background: var(--accent); color: var(--accent-ink); }
-.container { max-width: 1180px; margin: 0 auto; padding: 20px; }
+nav.nav a.active .nav-icon { color: var(--accent-ink); }
+.nav-icon { width: 17px; height: 17px; flex-shrink: 0; }
+#logoutBtn { flex-shrink: 0; }
+.container { max-width: 1180px; margin: 0 auto; padding: 26px 22px 48px; }
+
+.bottom-nav {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: saturate(180%) blur(10px);
+  border-top: 1px solid var(--border);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.bottom-nav a {
+  flex: 1; flex-direction: column; gap: 3px;
+  border-radius: 12px; padding: 6px 2px 5px; font-size: 11px;
+  text-align: center;
+}
+.bottom-nav a.active { background: transparent; color: var(--accent); }
+.bottom-nav a.active .nav-icon { color: var(--accent); }
+.bottom-nav .nav-icon { width: 21px; height: 21px; }
+.bottom-nav { display: none; }
+
+@media (max-width: 860px) {
+  nav.nav { display: none; }
+  .bottom-nav { display: flex; }
+  .container { padding: 18px 16px calc(90px + env(safe-area-inset-bottom)); }
+  .topbar-inner { padding: 10px 16px; }
+}
 
 /* ---------- basic elements ---------- */
 .card {
-  background: var(--card);
+  background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow);
-  padding: 18px 20px;
+  padding: 20px 22px;
   margin-bottom: 16px;
 }
+.card-flat { background: transparent; border: none; box-shadow: none; padding: 0; }
 .grid { display: grid; gap: 16px; }
 .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
 .stack { display: flex; flex-direction: column; gap: 8px; }
 .spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .muted { color: var(--muted); font-size: 13px; }
-.small { font-size: 12px; }
-.big { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
-.mid { font-size: 22px; font-weight: 650; }
-.hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
-.pill-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.small { font-size: 12.5px; }
+.big { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; }
+.mid { font-size: 21px; font-weight: 700; }
+.pill-list { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.page-head { margin-bottom: 18px; }
+.page-head h1 { margin-bottom: 4px; }
+.back-link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+.back-link:hover { color: var(--accent); text-decoration: none; }
 
 input, select, button, textarea {
-  font: inherit; padding: 8px 10px; border-radius: 8px;
-  border: 1px solid var(--border); background: #fff; color: var(--text);
+  font: inherit; padding: 9px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff; color: var(--ink);
 }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 textarea { resize: vertical; }
 button {
   background: var(--accent); color: var(--accent-ink); border: none;
-  cursor: pointer; font-weight: 600; padding: 8px 14px;
+  cursor: pointer; font-weight: 600; padding: 9px 16px;
+  transition: background .12s ease, transform .08s ease;
 }
-button:hover { filter: brightness(1.08); }
-button:disabled { opacity: .5; cursor: not-allowed; }
-button.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+button:hover { background: var(--accent-press); }
+button:active { transform: scale(.97); }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--border); }
+button.secondary:hover { background: var(--blush-2); }
 button.danger { background: var(--bad); }
+button.danger:hover { filter: brightness(1.08); }
 button.ghost { background: none; color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
-button.small, .row button.small { padding: 5px 9px; font-size: 12px; }
+button.ghost:hover { background: var(--blush-2); color: var(--ink); }
+button.small, .row button.small { padding: 6px 11px; font-size: 12.5px; }
 label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
-
-/* ---------- tables ---------- */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
-td.right, th.right { text-align: right; }
-tr:last-child td { border-bottom: none; }
-.amt-pos { color: var(--good); font-weight: 600; }
-.amt-neg { color: var(--text); }
 
 /* ---------- badges / status ---------- */
 .badge {
   display: inline-block; font-size: 11.5px; font-weight: 700;
-  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
 }
 .badge-good { background: var(--good-bg); color: var(--good); }
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
 .badge-bad { background: var(--bad-bg); color: var(--bad); }
 .badge-info { background: var(--info-bg); color: var(--info); }
-.badge-muted { background: #f0eee6; color: var(--muted); }
+.badge-muted { background: #F1EEF0; color: var(--muted); }
+.badge-accent { background: var(--blush); color: var(--accent-press); }
 
 /* ---------- progress bars ---------- */
-.bar { height: 8px; border-radius: 999px; background: #edeae0; overflow: hidden; }
-.bar > div { height: 100%; border-radius: 999px; background: var(--accent); }
-.bar.good > div { background: var(--good); }
-.bar.warn > div { background: var(--warn); }
-.bar.bad > div { background: var(--bad); }
+.bar { height: 9px; border-radius: 999px; background: #EFE9EB; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width .7s cubic-bezier(.16,1,.3,1); }
+.bar.good .bar-fill { background: var(--good); }
+.bar.warn .bar-fill { background: var(--warn); }
+.bar.bad .bar-fill { background: var(--bad); }
+
+/* ---------- segmented tabs ---------- */
+.seg { display: inline-flex; gap: 3px; background: #EFEAEC; border-radius: 999px; padding: 4px; margin-bottom: 18px; }
+.seg-btn { background: none; color: var(--muted); font-weight: 600; font-size: 13.5px; padding: 7px 16px; border-radius: 999px; border: none; }
+.seg-btn:hover { background: rgba(255,255,255,.6); color: var(--ink); }
+.seg-btn.active { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+.seg-btn.active:hover { background: var(--panel); }
+
+/* ---------- lists ---------- */
+.list { display: flex; flex-direction: column; }
+.list-row { padding: 13px 4px; border-bottom: 1px solid var(--border); }
+.list-row:last-child { border-bottom: none; }
+
+.txn-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.txn-date { width: 58px; flex-shrink: 0; color: var(--muted); font-size: 12px; }
+.txn-main { flex: 1; min-width: 140px; }
+.txn-desc { font-weight: 600; font-size: 14px; }
+.txn-meta { color: var(--muted); font-size: 12px; margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; }
+.txn-amt { font-weight: 700; font-size: 14.5px; white-space: nowrap; margin-left: auto; }
+.amt-pos { color: var(--good); }
+.amt-neg { color: var(--ink); }
+
+.budget-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.budget-name { font-weight: 700; font-size: 14.5px; }
+.budget-row-figures { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.budget-edit { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; }
+.budget-edit input { width: 100px; text-align: right; }
+
+.review-row-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.review-date { width: 58px; flex-shrink: 0; }
+.review-desc { flex: 1; font-weight: 600; font-size: 14px; }
+.review-amt { font-weight: 700; }
+.review-row-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+.review-row-fields select, .review-row-fields input { flex: 1; min-width: 130px; }
+
+/* ---------- empty states ---------- */
+.empty-state { text-align: center; padding: 30px 14px; }
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+.empty-title { font-weight: 700; color: var(--ink); margin-bottom: 4px; font-size: 14.5px; }
+.empty-desc { color: var(--muted); font-size: 13px; margin-bottom: 14px; max-width: 360px; margin-left: auto; margin-right: auto; }
+.empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(150deg, var(--blush) 0%, var(--blush-2) 55%, #FBF7F8 100%);
+  border: 1px solid #EAD7DE;
+  border-radius: var(--radius-lg);
+  padding: 30px 28px 26px;
+  margin-bottom: 20px;
+}
+.hero::before {
+  content: ""; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(139,30,63,.14), transparent 70%);
+  border-radius: 50%;
+}
+.hero-label { font-size: 13px; font-weight: 700; color: var(--accent-press); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.hero-amount {
+  font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em;
+  font-size: 52px; line-height: 1.05; color: var(--ink);
+  animation: heroRise .55s cubic-bezier(.16,1,.3,1) both;
+}
+.hero-pills { margin-top: 14px; position: relative; z-index: 1; }
+.member-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,.75); border: 1px solid #EAD7DE;
+  padding: 5px 12px; border-radius: 999px; font-size: 12.5px; color: var(--ink);
+}
+.member-pill b { font-weight: 700; }
+.hero-cta-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 22px; position: relative; z-index: 1; }
+.spend-chip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spend-figure { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
+.hero-btn { font-size: 14px; padding: 11px 20px; border-radius: 999px; box-shadow: 0 6px 18px rgba(139,30,63,.25); }
+
+@keyframes heroRise { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 /* ---------- misc widgets ---------- */
-.nudge { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg); margin-bottom: 8px; }
-.nudge.info { background: var(--info-bg); }
-.nudge .msg { font-size: 13.5px; }
-.empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
+.attn-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.attn-row:last-child { border-bottom: none; }
+.mini-budget-row { margin-bottom: 14px; }
+.mini-budget-row:last-child { margin-bottom: 0; }
+.insight-preview { font-size: 14px; line-height: 1.6; }
 .chart-wrap svg { width: 100%; height: auto; display: block; }
-.hbar-row { display: grid; grid-template-columns: 130px 1fr auto; gap: 10px; align-items: center; margin: 6px 0; font-size: 13px; }
+.hbar-row { display: grid; grid-template-columns: 130px 1fr auto; gap: 10px; align-items: center; margin: 8px 0; font-size: 13px; }
 .hbar-row .bar { height: 14px; }
-.tabs { display: flex; gap: 6px; margin-bottom: 14px; }
-.tabs button { background: none; color: var(--muted); border: 1px solid var(--border); }
-.tabs button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .insight-card { border-left: 4px solid var(--info); }
 .insight-card.sev-1, .insight-card.sev-2 { border-left-color: var(--bad); }
 .insight-card.sev-3 { border-left-color: var(--warn); }
 .insight-card.sev-4, .insight-card.sev-5 { border-left-color: var(--good); }
-.field { display: flex; flex-direction: column; gap: 3px; }
-.field label { font-size: 11.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 10px 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 10px 0; }
+
+/* ---------- more grid ---------- */
+.more-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.more-card {
+  display: flex; flex-direction: column; gap: 4px; position: relative;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 18px 20px 20px; box-shadow: var(--shadow); color: var(--ink);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.more-card:hover { text-decoration: none; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(26,18,20,.06), 0 14px 28px rgba(26,18,20,.08); }
+.more-icon { font-size: 22px; margin-bottom: 6px; }
+.more-title { font-weight: 700; font-size: 15px; }
+.more-desc { color: var(--muted); font-size: 13px; }
+.more-arrow { position: absolute; top: 18px; right: 18px; color: var(--muted); font-size: 15px; }
+
+/* ---------- tables (dense fallback views) ---------- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+td.right, th.right { text-align: right; }
+tr:last-child td { border-bottom: none; }
+
+/* ---------- motion ---------- */
+.fade-in { animation: fadeIn .4s ease both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
 @media (max-width: 640px) {
+  .hero-amount { font-size: 38px; }
   .big { font-size: 26px; }
-  .container { padding: 14px; }
+  .card { padding: 16px 16px; }
+  .budget-edit { margin-left: 0; width: 100%; }
 }
 </style>
 </head>
@@ -182,10 +332,10 @@ tr:last-child td { border-bottom: none; }
 
 <div id="authScreen" class="auth-wrap">
   <div class="auth-card">
-    <h1>Family Budget</h1>
-    <p class="muted">Sign in to your household ledger.</p>
+    <div class="auth-word">Family Budget<span class="dot">.</span></div>
+    <p class="tagline">Every pound, every plan, one household ledger.</p>
     <div id="authMsg" class="muted small"></div>
-    <div class="row">
+    <div class="stack">
       <input id="authEmail" type="email" placeholder="Email" autocomplete="username">
       <input id="authPw" type="password" placeholder="Password" autocomplete="current-password">
       <button id="authLoginBtn">Log in</button>
@@ -197,12 +347,13 @@ tr:last-child td { border-bottom: none; }
 <div id="appShell" style="display:none">
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand">Family Budget</div>
+      <a class="brand-link" href="#home"><span class="brand-word">Family Budget<span class="dot">.</span></span></a>
       <nav class="nav" id="nav"></nav>
       <button class="ghost" id="logoutBtn">Log out</button>
     </div>
   </header>
   <main class="container" id="view"></main>
+  <nav class="bottom-nav" id="bottomNav"></nav>
 </div>
 
 <script>
@@ -232,16 +383,32 @@ function setToken(token) {
 const S = {
   token: localStorage.getItem(TOKEN_KEY) || readCookie(TOKEN_KEY),
   members: [], accounts: [], categories: [],
+  planTab: "budgets", moneyTab: "feed",
 };
 
-
-const NAV = [
-  ["#home", "Home"], ["#txns", "Transactions"], ["#review", "Review"],
-  ["#budgets", "Budgets"], ["#assets", "Assets"], ["#policies", "Policies"],
-  ["#payslips", "Payslips"], ["#trends", "Trends"], ["#export", "Export"],
-  ["#members", "Members"], ["#accounts", "Accounts"], ["#banking", "Banking"],
-  ["#insights", "Insights"],
+const HUBS = [
+  { hash: "#home", label: "Home", icon: "home" },
+  { hash: "#plan", label: "Plan", icon: "plan" },
+  { hash: "#money", label: "Money", icon: "money" },
+  { hash: "#wealth", label: "Wealth", icon: "wealth" },
+  { hash: "#more", label: "More", icon: "more" },
 ];
+
+const HUB_MAP = {
+  "#home": "#home",
+  "#plan": "#plan", "#budgets": "#plan", "#review": "#plan",
+  "#money": "#money", "#txns": "#money", "#banking": "#money",
+  "#wealth": "#wealth", "#assets": "#wealth",
+  "#more": "#more", "#members": "#more", "#accounts": "#more", "#policies": "#more",
+  "#payslips": "#more", "#trends": "#more", "#export": "#more", "#insights": "#more",
+};
+
+const ALIASES = {
+  "#txns": "#money",
+  "#budgets": "#plan",
+  "#review": "#plan?tab=review",
+  "#assets": "#wealth",
+};
 
 const ACCOUNT_TYPES = [
   "current", "savings", "credit_card", "isa", "jisa", "gia", "sipp",
@@ -254,6 +421,17 @@ const POLICY_KINDS = [
   "life", "critical_illness", "income_protection", "home_buildings",
   "home_contents", "car", "travel", "private_medical", "health_cash_plan", "other",
 ];
+
+const ICONS = {
+  home: '<path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v9.5h4.5v-6h2v6h4.5V10"/>',
+  plan: '<rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M9 3.5v3M15 3.5v3"/><path d="M8 12.5l2.2 2.2L16 9.5"/>',
+  money: '<rect x="2.5" y="6" width="19" height="13" rx="3"/><path d="M2.5 10.5h19"/><path d="M6 15h4"/>',
+  wealth: '<path d="M4 17.5 9.5 12l3.5 3.5L20 8"/><path d="M14.5 8H20v5.5"/>',
+  more: '<circle cx="6" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18" cy="12" r="1.7"/>',
+};
+function icon(name) {
+  return `<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ""}</svg>`;
+}
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
@@ -316,6 +494,25 @@ function severityBadge(sev) {
   return badge("low", "good");
 }
 function emptyRow(msg) { return `<p class="empty">${esc(msg)}</p>`; }
+function emptyState(icon, title, desc, ctaHtml = "") {
+  return `<div class="empty-state">
+    <div class="empty-icon">${icon}</div>
+    <div class="empty-title">${esc(title)}</div>
+    ${desc ? `<div class="empty-desc">${esc(desc)}</div>` : ""}
+    ${ctaHtml}
+  </div>`;
+}
+function pageHead(title, subtitle, backHash, backLabel) {
+  return `<div class="page-head">
+    ${backHash ? `<a class="back-link" href="${backHash}">‹ ${esc(backLabel || "Back")}</a>` : ""}
+    <h1>${esc(title)}</h1>
+    ${subtitle ? `<p class="muted">${esc(subtitle)}</p>` : ""}
+  </div>`;
+}
+function progressBar(pct, kind) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  return `<div class="bar ${kind}"><div class="bar-fill" data-pct="${clamped.toFixed(0)}" style="width:0%"></div></div>`;
+}
 
 /* small reusable option builders */
 function memberOptions(selected, allowNone = true) {
@@ -403,37 +600,72 @@ async function bootstrap() {
 /* ============================== router / nav ============================== */
 
 function renderNav() {
-  el("nav").innerHTML = NAV.map(([hash, label]) => `<a href="${hash}">${esc(label)}</a>`).join("");
+  const html = HUBS.map(h => `<a href="${h.hash}" data-hub="${h.hash}">${icon(h.icon)}<span>${esc(h.label)}</span></a>`).join("");
+  el("nav").innerHTML = html;
+  el("bottomNav").innerHTML = html;
 }
 function highlightNav() {
-  const h = location.hash || "#home";
-  el("nav").querySelectorAll("a").forEach(a => a.classList.toggle("active", a.getAttribute("href") === h));
+  const base = (location.hash || "#home").split("?")[0];
+  const hub = HUB_MAP[base] || base;
+  document.querySelectorAll("#nav a, #bottomNav a").forEach(a => a.classList.toggle("active", a.dataset.hub === hub));
 }
 
 const ROUTES = {
-  "#home": renderHome, "#txns": renderTxns, "#review": renderReview,
-  "#budgets": renderBudgets, "#assets": renderAssets, "#policies": renderPolicies,
-  "#payslips": renderPayslips, "#trends": renderTrends, "#export": renderExport,
-  "#members": renderMembers, "#accounts": renderAccounts, "#banking": renderBanking,
+  "#home": renderHome,
+  "#plan": renderPlan,
+  "#money": renderMoney,
+  "#wealth": renderWealth,
+  "#more": renderMore,
+  "#members": renderMembers,
+  "#accounts": renderAccounts,
+  "#policies": renderPolicies,
+  "#payslips": renderPayslips,
+  "#trends": renderTrends,
+  "#export": renderExport,
   "#insights": renderInsights,
+  "#banking": renderBanking,
 };
+
+function mountView(html) {
+  const view = el("view");
+  view.innerHTML = html;
+  view.classList.remove("fade-in");
+  void view.offsetWidth; // restart animation
+  view.classList.add("fade-in");
+  requestAnimationFrame(() => {
+    view.querySelectorAll(".bar-fill[data-pct]").forEach(b => { b.style.width = b.dataset.pct + "%"; });
+  });
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
 
 async function render() {
   if (!S.token) return;
+  const raw = location.hash || "#home";
+  const [base, query] = raw.split("?");
+  if (ALIASES[base]) { location.hash = ALIASES[base]; return; }
   highlightNav();
-  const view = el("view");
-  const hash = location.hash || "#home";
-  const fn = ROUTES[hash] || renderHome;
-  view.innerHTML = `<p class="empty">Loading…</p>`;
+  const params = new URLSearchParams(query || "");
+  const fn = ROUTES[base] || renderHome;
   try {
-    view.innerHTML = await fn();
+    mountView(await fn(params));
   } catch (e) {
-    view.innerHTML = card(`<p class="muted">Couldn't load this screen — ${esc(e.message)}.</p>`);
+    mountView(card(`<p class="muted">Couldn't load this screen — ${esc(e.message)}.</p>`));
   }
 }
 window.addEventListener("hashchange", render);
 
 /* ============================== Home ============================== */
+
+function budgetMiniRow(b) {
+  const budgetAmt = Number(b.amount_gbp || 0);
+  const spent = Number(b.spent ?? b.spent_gbp ?? 0);
+  const pct = budgetAmt > 0 ? Math.min(150, (spent / budgetAmt) * 100) : (spent > 0 ? 100 : 0);
+  const kind = budgetAmt === 0 ? "" : (spent > budgetAmt ? "bad" : pct >= 85 ? "warn" : "good");
+  return `<div class="mini-budget-row">
+    <div class="spread"><span>${esc(b.category_name || b.category)}</span><span class="muted small">${gbp(spent, 0)}${budgetAmt ? " / " + gbp(budgetAmt, 0) : ""}</span></div>
+    ${progressBar(Math.min(100, pct), kind)}
+  </div>`;
+}
 
 async function renderHome() {
   const h = await api("/home");
@@ -442,77 +674,216 @@ async function renderHome() {
   const baseline = Number(h.baseline_spend ?? 0);
   const pct = baseline > 0 ? ((monthSpend - baseline) / baseline) * 100 : null;
   const spendKind = pct == null ? "muted" : (pct > 0 ? "bad" : "good");
-
-  const movers = (h.top_movers || []).map(m => `
-    <tr>
-      <td>${esc(m.category || m.name || "—")}</td>
-      <td class="right">${gbp(m.this_month ?? m.amount_gbp ?? 0, 2)}</td>
-      <td class="right">${m.delta != null ? badge((m.delta > 0 ? "+" : "") + Number(m.delta).toFixed(0), m.delta > 0 ? "bad" : "good") : "—"}</td>
-    </tr>`).join("");
-
-  const renewals = (h.upcoming_renewals || []).map(r => {
-    const days = r.days ?? (r.renewal_date ? daysUntil(r.renewal_date) : null);
-    const kind = days == null ? "muted" : (days <= 14 ? "bad" : days <= 30 ? "warn" : "info");
-    return `<tr>
-      <td>${esc(r.provider || "—")} <span class="muted small">${esc(r.kind || "")}</span></td>
-      <td>${fdate(r.renewal_date)}</td>
-      <td class="right">${r.premium != null ? gbp(r.premium, 2) : "—"}</td>
-      <td class="right">${days != null ? badge(days + "d", kind) : "—"}</td>
-    </tr>`;
-  }).join("");
-
-  const staleAssets = h.stale_assets || [];
   const uncategorised = h.uncategorised ?? h.uncategorised_count ?? 0;
+  const staleAssets = h.stale_assets || [];
+  const renewals = h.upcoming_renewals || [];
   const insightsPreview = h.insights_preview || [];
 
+  let cta;
+  if (uncategorised > 0) cta = { href: "#plan?tab=review", label: `Review ${uncategorised} uncategorised` };
+  else if (staleAssets.length) cta = { href: "#wealth", label: `Update ${staleAssets.length} stale valuation${staleAssets.length === 1 ? "" : "s"}` };
+  else if (renewals.length) cta = { href: "#policies", label: `Check ${renewals.length} renewal${renewals.length === 1 ? "" : "s"}` };
+  else cta = { href: "#plan", label: "Review this month's plan" };
+
+  const memberPills = (nw.by_member || []).map(m => `<span class="member-pill">${esc(m.name)} <b>${gbp(m.net_worth_gbp, 0)}</b></span>`).join("")
+    || `<span class="muted small">Add household members on the More tab to see a breakdown.</span>`;
+
+  let budgets = [];
+  try { budgets = await api("/budgets?month=" + monthISO()); } catch { /* ignore, shown as empty state */ }
+  const topBudgets = (budgets || []).slice()
+    .sort((a, b) => Number(b.spent ?? b.spent_gbp ?? 0) - Number(a.spent ?? a.spent_gbp ?? 0))
+    .slice(0, 4);
+
+  const planCard = card(`
+    <div class="spread"><h2>This month's plan</h2><a class="small" href="#plan">Open plan →</a></div>
+    ${topBudgets.length ? topBudgets.map(budgetMiniRow).join("") :
+      emptyState("🗂️", "No budgets set yet", "Set a spending limit per category and track progress here.", `<a href="#plan"><button class="small">Set a budget</button></a>`)}
+  `);
+
+  const attentionItems = [];
+  if (uncategorised > 0) attentionItems.push(`<div class="attn-row"><span>🔎 <b>${uncategorised}</b> transaction${uncategorised === 1 ? "" : "s"} need a category</span><a href="#plan?tab=review"><button class="small">Review →</button></a></div>`);
+  if (staleAssets.length) attentionItems.push(`<div class="attn-row"><span>📉 <b>${staleAssets.length}</b> asset${staleAssets.length === 1 ? "" : "s"} need a fresh valuation</span><a href="#wealth"><button class="small">Update →</button></a></div>`);
+  if (renewals.length) attentionItems.push(`<div class="attn-row"><span>📅 <b>${renewals.length}</b> renewal${renewals.length === 1 ? "" : "s"} coming up</span><a href="#policies"><button class="small">View →</button></a></div>`);
+
+  const attentionCard = card(`
+    <h2>Needs attention</h2>
+    ${attentionItems.length ? attentionItems.join("") : emptyState("✅", "All clear", "No uncategorised spending, stale assets or renewals right now.")}
+  `);
+
+  const insight = insightsPreview[0];
+  const insightCard = card(`
+    <div class="spread"><h2>Insight</h2><a class="small" href="#insights">See all →</a></div>
+    ${insight ? `<div class="insight-preview">${severityBadge(insight.severity)} <b>${esc(insight.title)}</b>${insight.est_saving_gbp != null ? `<div class="muted small" style="margin-top:6px">save ~${gbp(insight.est_saving_gbp, 0)}</div>` : ""}</div>`
+      : emptyState("💡", "No insights yet", "Run the rules engine to surface savings ideas.", `<a href="#insights"><button class="small">Run insights</button></a>`)}
+  `);
+
   return `
-    <div class="grid grid-2">
-      ${card(`
-        <h2>Net worth</h2>
-        <div class="big">${gbp(nw.total_gbp ?? 0)}</div>
-        <div class="pill-list" style="margin-top:10px">
-          ${(nw.by_member || []).map(m => `<span class="badge badge-muted">${esc(m.name)}: ${gbp(m.net_worth_gbp, 0)}</span>`).join("") || `<span class="muted small">No members yet.</span>`}
+    <div class="hero">
+      <div class="hero-label">Family net worth</div>
+      <div class="hero-amount">${gbp(nw.total_gbp ?? 0)}</div>
+      <div class="pill-list hero-pills">${memberPills}</div>
+      <div class="hero-cta-row">
+        <div class="spend-chip">
+          <span class="muted small">This month's spend</span>
+          <span class="spend-figure">${gbp(monthSpend)}</span>
+          ${pct != null ? badge((pct > 0 ? "+" : "") + pct.toFixed(0) + "% vs usual", spendKind) : ""}
         </div>
-      `)}
-      ${card(`
-        <h2>This month's spend</h2>
-        <div class="big">${gbp(monthSpend)}</div>
-        <p class="muted">vs baseline ${gbp(baseline)}
-          ${pct != null ? badge((pct > 0 ? "+" : "") + pct.toFixed(0) + "%", spendKind) : ""}
-        </p>
-      `)}
+        <a href="${cta.href}"><button class="hero-btn">${esc(cta.label)}</button></a>
+      </div>
     </div>
-
-    ${uncategorised > 0 ? `<div class="nudge"><span class="msg">🔎 <b>${uncategorised}</b> transactions need a category.</span><a href="#review"><button class="small">Review queue →</button></a></div>` : ""}
-    ${staleAssets.length ? `<div class="nudge info"><span class="msg">📉 <b>${staleAssets.length}</b> asset${staleAssets.length === 1 ? "" : "s"} need a fresh valuation (${esc(staleAssets.slice(0, 3).map(a => a.name).join(", "))}${staleAssets.length > 3 ? "…" : ""}).</span><a href="#assets"><button class="small">Update →</button></a></div>` : ""}
-
-    <div class="grid grid-2">
-      ${card(`
-        <h2>Top movers this month</h2>
-        ${movers ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th class="right">Spend</th><th class="right">Change</th></tr></thead><tbody>${movers}</tbody></table></div>` : emptyRow("No spending movement yet.")}
-      `)}
-      ${card(`
-        <h2>Upcoming renewals</h2>
-        ${renewals ? `<div class="table-wrap"><table><thead><tr><th>Policy</th><th>Renews</th><th class="right">Premium</th><th class="right">Due</th></tr></thead><tbody>${renewals}</tbody></table></div>` : emptyRow("Nothing renewing soon.")}
-      `)}
-    </div>
-
-    ${card(`
-      <div class="spread"><h2>Insights</h2><a href="#insights" class="small">See all →</a></div>
-      ${insightsPreview.length ? insightsPreview.slice(0, 5).map(i => `
-        <div class="row" style="justify-content:space-between">
-          <span>${severityBadge(i.severity)} ${esc(i.title)}</span>
-          ${i.est_saving_gbp != null ? `<span class="muted small">save ~${gbp(i.est_saving_gbp, 0)}</span>` : ""}
-        </div>`).join("") : emptyRow("No open insights right now.")}
-    `)}
+    <div class="grid grid-3">${planCard}${attentionCard}${insightCard}</div>
   `;
 }
 
-/* ============================== Transactions ============================== */
+/* ============================== Plan (#plan) ============================== */
+
+let budgetMonth = monthISO();
+
+async function renderPlan(params) {
+  const tab = params.get("tab") || S.planTab || "budgets";
+  S.planTab = tab;
+  const tabsHtml = `<div class="seg">
+    <a class="seg-btn ${tab === "budgets" ? "active" : ""}" href="#plan?tab=budgets">Budgets</a>
+    <a class="seg-btn ${tab === "review" ? "active" : ""}" href="#plan?tab=review">Review</a>
+  </div>`;
+  const body = tab === "review" ? await reviewSectionHtml() : await budgetsSectionHtml();
+  return `${pageHead("Plan", "Set monthly budgets and clear the review queue.")}${tabsHtml}${body}`;
+}
+
+function budgetRow(r) {
+  const budgetAmt = Number(r.amount_gbp || 0);
+  const spent = Number(r.spent ?? r.spent_gbp ?? 0);
+  const pct = budgetAmt > 0 ? Math.min(150, (spent / budgetAmt) * 100) : (spent > 0 ? 100 : 0);
+  const kind = budgetAmt === 0 ? "" : (spent > budgetAmt ? "bad" : pct >= 85 ? "warn" : "good");
+  const statusLabel = budgetAmt === 0 ? "no limit" : (spent > budgetAmt ? "over" : pct >= 85 ? "close" : "on track");
+  const statusKind = budgetAmt === 0 ? "muted" : kind;
+  return `
+    <div class="list-row">
+      <div class="budget-row-top">
+        <span class="budget-name">${esc(r.category_name || r.category)}</span>
+        ${badge(statusLabel, statusKind)}
+      </div>
+      ${progressBar(Math.min(100, pct), kind)}
+      <div class="budget-row-figures">
+        <span class="muted small">Spent ${gbp(spent, 2)}</span>
+        ${budgetAmt ? `<span class="muted small">Remaining ${gbp(budgetAmt - spent, 2)}</span>` : ""}
+        <span class="budget-edit">
+          <input type="number" step="0.01" min="0" id="bud-${r.category_id}" value="${budgetAmt || ""}" placeholder="0">
+          <button class="small" onclick="saveBudget('${r.category_id}')">Save</button>
+        </span>
+      </div>
+    </div>`;
+}
+
+async function budgetsSectionHtml() {
+  let rows = [], loadError = "";
+  try { rows = await api("/budgets?month=" + budgetMonth); }
+  catch (e) { loadError = e.message; }
+  const body = (rows || []).map(budgetRow).join("");
+  return card(`
+    <div class="spread">
+      <h2>Budgets</h2>
+      <input type="month" value="${budgetMonth}" onchange="budgetMonth=this.value;render()">
+    </div>
+    <div id="budgets-note" class="muted small"></div>
+    ${loadError ? emptyState("⚠️", "Couldn't load budgets", loadError) :
+      body ? `<div class="list">${body}</div>` :
+      emptyState("🗂️", "No expense categories to budget yet", "Categorise a few transactions first, then set limits here.")}
+  `);
+}
+
+async function saveBudget(categoryId) {
+  const note = el("budgets-note");
+  const amount_gbp = Number(el("bud-" + categoryId).value || 0);
+  try {
+    await api("/budgets", { method: "PUT", body: JSON.stringify({ category_id: categoryId, year_month: budgetMonth, amount_gbp }) });
+    render();
+  } catch (e) { if (note) note.textContent = "Couldn't save — " + e.message; }
+}
+
+function reviewRow(t) {
+  return `
+    <div class="list-row">
+      <div class="review-row-top">
+        <span class="review-date muted small">${fdate(t.posted_at)}</span>
+        <span class="review-desc">${esc(t.description)}${t.merchant ? `<span class="muted small"> · ${esc(t.merchant)}</span>` : ""}</span>
+        <span class="review-amt ${Number(t.amount) < 0 ? "amt-neg" : "amt-pos"}">${gbp(t.amount, 2)}</span>
+      </div>
+      <div class="review-row-fields">
+        <select id="cat-${t.id}">${categoryOptions(null)}</select>
+        <select id="mem-${t.id}">${memberOptions(null)}</select>
+        <input id="tag-${t.id}" placeholder="activity (optional)" list="activity-tags">
+        <button class="small" onclick="saveReview('${t.id}')">Save</button>
+      </div>
+    </div>`;
+}
+
+async function reviewSectionHtml() {
+  let queue = [], loadError = "";
+  try { queue = await api("/categorise/review?limit=100"); }
+  catch (e) { loadError = e.message; }
+  const rows = (queue || []).map(reviewRow).join("");
+  return card(`
+    <div class="spread">
+      <h2>Review queue</h2>
+      <button class="secondary" onclick="applyRules()">Apply rules to all</button>
+    </div>
+    <p class="muted">Pick a category for each transaction — optionally a member or a kids' activity tag.</p>
+    <div id="review-note" class="muted small"></div>
+    ${loadError ? emptyState("⚠️", "Couldn't load review queue", loadError) :
+      rows ? `<div class="list">${rows}</div>` :
+      emptyState("🎉", "Nothing to review", "Everything is categorised — nice work.")}
+    <datalist id="activity-tags">
+      <option value="swimming"><option value="piano"><option value="football">
+      <option value="gymnastics"><option value="dance">
+    </datalist>
+  `);
+}
+
+async function saveReview(id) {
+  const category_id = el("cat-" + id).value;
+  const member_id = el("mem-" + id).value || null;
+  const activity_tag = el("tag-" + id).value.trim() || null;
+  if (!category_id) { el("review-note").textContent = "Pick a category first."; return; }
+  try {
+    await api(`/transactions/${id}`, { method: "PATCH", body: JSON.stringify({ category_id, member_id, activity_tag }) });
+    render();
+  } catch (e) { el("review-note").textContent = "Couldn't save — " + e.message; }
+}
+
+async function applyRules() {
+  const note = el("review-note");
+  note.textContent = "Applying rules…";
+  try {
+    await api("/categorise/apply", { method: "POST", body: JSON.stringify({}) });
+    render();
+  } catch (e) { note.textContent = "Couldn't apply rules — " + e.message; }
+}
+
+/* ============================== Money (#money) ============================== */
 
 let txnFilters = { account_id: "", category_id: "", member_id: "", uncategorised: false, q: "" };
 
-async function renderTxns() {
+function txnRow(t) {
+  const catLabel = t.category_name || categoryName(t.category_id);
+  return `
+    <div class="list-row">
+      <div class="txn-row">
+        <span class="txn-date">${fdate(t.posted_at)}</span>
+        <div class="txn-main">
+          <div class="txn-desc">${esc(t.description)}</div>
+          <div class="txn-meta">
+            ${t.account_name ? `<span>${esc(t.account_name)}</span>` : ""}
+            <span>${catLabel ? esc(catLabel) : "Uncategorised"}</span>
+            ${t.member_name ? `<span>${esc(t.member_name)}</span>` : ""}
+          </div>
+        </div>
+        <span class="txn-amt ${Number(t.amount) < 0 ? "amt-neg" : "amt-pos"}">${gbp(t.amount, 2)}</span>
+      </div>
+    </div>`;
+}
+
+async function feedSectionHtml() {
   const params = new URLSearchParams({ limit: "150" });
   if (txnFilters.account_id) params.set("account_id", txnFilters.account_id);
   if (txnFilters.category_id) params.set("category_id", txnFilters.category_id);
@@ -520,54 +891,51 @@ async function renderTxns() {
   if (txnFilters.uncategorised) params.set("uncategorised", "true");
   if (txnFilters.q) params.set("q", txnFilters.q);
 
-  let txns = [];
-  let loadError = "";
+  let txns = [], loadError = "";
   try { txns = await api("/transactions?" + params.toString()); }
   catch (e) { loadError = e.message; }
 
-  const rows = (txns || []).map(t => `
-    <tr>
-      <td class="muted">${fdate(t.posted_at)}</td>
-      <td>${esc(t.description)}${t.merchant ? `<div class="muted small">${esc(t.merchant)}</div>` : ""}</td>
-      <td class="muted">${esc(t.account_name || "")}</td>
-      <td>${t.category_name || categoryName(t.category_id) ? esc(t.category_name || categoryName(t.category_id)) : `<span class="muted">Uncategorised</span>`}</td>
-      <td class="muted">${t.member_name || "—"}</td>
-      <td class="right ${Number(t.amount) < 0 ? "amt-neg" : "amt-pos"}">${gbp(t.amount, 2)}</td>
-    </tr>`).join("");
+  const rows = (txns || []).map(txnRow).join("");
 
+  return card(`
+    <div class="spread"><h2>Transaction feed</h2></div>
+    <div class="row">
+      <select onchange="txnFilters.account_id=this.value;render()"><option value="">All accounts</option>${accountOptions(txnFilters.account_id)}</select>
+      <select onchange="txnFilters.category_id=this.value;render()"><option value="">All categories</option>${categoryOptions(txnFilters.category_id, false)}</select>
+      <select onchange="txnFilters.member_id=this.value;render()">${memberOptions(txnFilters.member_id).replace("— none —", "All members")}</select>
+      <input placeholder="Search description…" value="${esc(txnFilters.q)}" onkeydown="if(event.key==='Enter'){txnFilters.q=this.value;render()}">
+      <label class="check"><input type="checkbox" ${txnFilters.uncategorised ? "checked" : ""} onchange="txnFilters.uncategorised=this.checked;render()"> uncategorised only</label>
+    </div>
+    ${loadError ? emptyState("⚠️", "Couldn't load transactions", loadError) :
+      rows ? `<div class="list">${rows}</div>` :
+      emptyState("🔍", "No transactions match these filters", "Try widening your filters, or import a statement from the Import tab.")}
+  `);
+}
+
+async function importSectionHtml() {
   return `
     ${card(`
-      <div class="spread"><h2>Import a statement</h2></div>
+      <h2>Import a bank statement</h2>
+      <p class="muted small">CSV exports and text-based PDF statements from most UK banks are auto-detected. Re-importing the same file never duplicates.</p>
       <div class="row">
         <input type="file" id="csv-file" accept=".csv,.pdf,text/csv,application/pdf">
         <select id="csv-account">${accountOptions(null, ["current", "savings", "credit_card"])}</select>
-        <button onclick="importCsv()">Import bank statement</button>
+        <button onclick="importCsv()">Import statement</button>
       </div>
-      <p class="muted small" id="csv-note">CSV exports and text-based PDF statements from most UK banks are auto-detected. Re-importing the same file never duplicates.</p>
-      <hr class="hr">
+      <p class="muted small" id="csv-note"></p>
+    `)}
+    ${card(`
+      <h2>Import investment holdings</h2>
+      <p class="muted small">Hargreaves Lansdown and Nutmeg holdings or transaction exports.</p>
       <div class="row">
         <input type="file" id="inv-file" accept=".csv,.pdf,text/csv,application/pdf">
         <select id="inv-account">${accountOptions(null, INVESTMENT_TYPES)}</select>
         <button class="secondary" onclick="importInvestments()">Import HL / Nutmeg statement</button>
       </div>
-      <p class="muted small" id="inv-note">Hargreaves Lansdown and Nutmeg holdings or transaction exports.</p>
-    `)}
-    ${card(`
-      <div class="spread"><h2>Transactions</h2></div>
-      <div class="row">
-        <select id="f-account" onchange="txnFilters.account_id=this.value;renderTxnsInto()"><option value="">All accounts</option>${accountOptions(txnFilters.account_id)}</select>
-        <select id="f-category" onchange="txnFilters.category_id=this.value;renderTxnsInto()"><option value="">All categories</option>${categoryOptions(txnFilters.category_id, false)}</select>
-        <select id="f-member" onchange="txnFilters.member_id=this.value;renderTxnsInto()">${memberOptions(txnFilters.member_id).replace("— none —", "All members")}</select>
-        <input id="f-q" placeholder="Search description…" value="${esc(txnFilters.q)}" onkeydown="if(event.key==='Enter'){txnFilters.q=this.value;renderTxnsInto()}">
-        <label class="check"><input type="checkbox" id="f-uncat" ${txnFilters.uncategorised ? "checked" : ""} onchange="txnFilters.uncategorised=this.checked;renderTxnsInto()"> uncategorised only</label>
-      </div>
-      ${loadError ? emptyRow("Couldn't load transactions — " + loadError) :
-        rows ? `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Account</th><th>Category</th><th>Member</th><th class="right">Amount</th></tr></thead><tbody>${rows}</tbody></table></div>`
-             : emptyRow("No transactions match these filters.")}
+      <p class="muted small" id="inv-note"></p>
     `)}
   `;
 }
-async function renderTxnsInto() { el("view").innerHTML = await renderTxns(); }
 
 async function importCsv() {
   const f = el("csv-file").files[0];
@@ -582,7 +950,7 @@ async function importCsv() {
     note.textContent = `Imported ${body.imported} transactions` +
       (body.duplicates_skipped ? `, ${body.duplicates_skipped} duplicates skipped` : "") +
       (body.warnings?.length ? ` — ${body.warnings.length} rows skipped` : "");
-    renderTxnsInto();
+    render();
   } catch (e) { note.textContent = "Import failed: " + e.message; }
 }
 
@@ -598,124 +966,28 @@ async function importInvestments() {
     const body = await api("/import/investments", { method: "POST", body: fd });
     note.textContent = `Imported ${body.imported ?? body.row_count ?? "holdings"}` +
       (body.warnings?.length ? ` — ${body.warnings.length} warning(s)` : "");
-    renderTxnsInto();
+    render();
   } catch (e) { note.textContent = "Import failed: " + e.message; }
 }
 
-/* ============================== Review queue ============================== */
-
-async function renderReview() {
-  let queue = [], loadError = "";
-  try { queue = await api("/categorise/review?limit=100"); }
-  catch (e) { loadError = e.message; }
-
-  const rows = (queue || []).map(t => `
-    <tr>
-      <td class="muted">${fdate(t.posted_at)}</td>
-      <td>${esc(t.description)}${t.merchant ? `<div class="muted small">${esc(t.merchant)}</div>` : ""}</td>
-      <td class="muted">${esc(t.account_name || "")}</td>
-      <td class="right">${gbp(t.amount, 2)}</td>
-      <td><select id="cat-${t.id}">${categoryOptions(null)}</select></td>
-      <td><select id="mem-${t.id}">${memberOptions(null)}</select></td>
-      <td><input id="tag-${t.id}" placeholder="activity (optional)" list="activity-tags" style="width:120px"></td>
-      <td><button class="small" onclick="saveReview('${t.id}')">Save</button></td>
-    </tr>`).join("");
-
-  return `
-    ${card(`
-      <div class="spread">
-        <h2>Review queue</h2>
-        <button class="secondary" onclick="applyRules()">Apply rules to all</button>
-      </div>
-      <p class="muted">Pick a category (and optionally who it belongs to, or a kids' activity tag) for each uncategorised transaction.</p>
-      <div id="review-note" class="muted small"></div>
-      ${loadError ? emptyRow("Couldn't load review queue — " + loadError) :
-        rows ? `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="right">Amount</th><th>Category</th><th>Member</th><th>Activity</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
-             : emptyRow("Nothing to review — everything is categorised. 🎉")}
-      <datalist id="activity-tags">
-        <option value="swimming"><option value="piano"><option value="football">
-        <option value="gymnastics"><option value="dance">
-      </datalist>
-    `)}
-  `;
+async function renderMoney(params) {
+  const tab = params.get("tab") || S.moneyTab || "feed";
+  S.moneyTab = tab;
+  const tabsHtml = `<div class="seg">
+    <a class="seg-btn ${tab === "feed" ? "active" : ""}" href="#money?tab=feed">Feed</a>
+    <a class="seg-btn ${tab === "import" ? "active" : ""}" href="#money?tab=import">Import</a>
+    <a class="seg-btn ${tab === "banking" ? "active" : ""}" href="#money?tab=banking">Banking</a>
+  </div>`;
+  let body;
+  if (tab === "import") body = await importSectionHtml();
+  else if (tab === "banking") body = await bankingSectionHtml();
+  else body = await feedSectionHtml();
+  return `${pageHead("Money", "Transactions, statement imports and bank connections.")}${tabsHtml}${body}`;
 }
 
-async function saveReview(id) {
-  const category_id = el("cat-" + id).value;
-  const member_id = el("mem-" + id).value || null;
-  const activity_tag = el("tag-" + id).value.trim() || null;
-  if (!category_id) { el("review-note").textContent = "Pick a category first."; return; }
-  try {
-    await api(`/transactions/${id}`, { method: "PATCH", body: JSON.stringify({ category_id, member_id, activity_tag }) });
-    el("view").innerHTML = await renderReview();
-  } catch (e) { el("review-note").textContent = "Couldn't save — " + e.message; }
-}
+/* ============================== Wealth (#wealth) ============================== */
 
-async function applyRules() {
-  const note = el("review-note");
-  note.textContent = "Applying rules…";
-  try {
-    const res = await api("/categorise/apply", { method: "POST", body: JSON.stringify({}) });
-    note.textContent = `Auto-categorised ${res.updated ?? res.count ?? 0} transaction(s).`;
-    el("view").innerHTML = await renderReview();
-  } catch (e) { note.textContent = "Couldn't apply rules — " + e.message; }
-}
-
-/* ============================== Budgets ============================== */
-
-let budgetMonth = monthISO();
-
-async function renderBudgets() {
-  let rows = [], loadError = "";
-  try { rows = await api("/budgets?month=" + budgetMonth); }
-  catch (e) { loadError = e.message; }
-
-  const body = (rows || []).map(r => {
-    const budgetAmt = Number(r.amount_gbp || 0);
-    const spent = Number(r.spent ?? r.spent_gbp ?? 0);
-    const pct = budgetAmt > 0 ? Math.min(150, (spent / budgetAmt) * 100) : (spent > 0 ? 100 : 0);
-    const kind = budgetAmt === 0 ? "" : (spent > budgetAmt ? "bad" : pct >= 85 ? "warn" : "good");
-    return `
-      <tr>
-        <td>${esc(r.category_name || r.category)}</td>
-        <td class="right">${gbp(spent, 2)}</td>
-        <td class="right">
-          <input type="number" step="0.01" min="0" style="width:100px;text-align:right" id="bud-${r.category_id}" value="${budgetAmt || ""}" placeholder="0">
-        </td>
-        <td class="right ${spent > budgetAmt && budgetAmt > 0 ? "amt-neg" : ""}">${budgetAmt ? gbp(budgetAmt - spent, 2) : "—"}</td>
-        <td style="min-width:120px"><div class="bar ${kind}"><div style="width:${Math.min(100, pct)}%"></div></div></td>
-        <td><button class="small" onclick="saveBudget('${r.category_id}')">Save</button></td>
-      </tr>`;
-  }).join("");
-
-  return `
-    ${card(`
-      <div class="spread">
-        <h2>Budgets</h2>
-        <input type="month" value="${budgetMonth}" onchange="budgetMonth=this.value;renderBudgetsInto()">
-      </div>
-      <div id="budgets-note" class="muted small"></div>
-      ${loadError ? emptyRow("Couldn't load budgets — " + loadError) :
-        body ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th class="right">Spent</th><th class="right">Budget (£)</th><th class="right">Remaining</th><th>Progress</th><th></th></tr></thead><tbody>${body}</tbody></table></div>`
-             : emptyRow("No expense categories to budget yet.")}
-    `)}
-  `;
-}
-async function renderBudgetsInto() { el("view").innerHTML = await renderBudgets(); }
-
-async function saveBudget(categoryId) {
-  const note = el("budgets-note");
-  const amount_gbp = Number(el("bud-" + categoryId).value || 0);
-  try {
-    await api("/budgets", { method: "PUT", body: JSON.stringify({ category_id: categoryId, year_month: budgetMonth, amount_gbp }) });
-    note.textContent = "Saved.";
-    renderBudgetsInto();
-  } catch (e) { note.textContent = "Couldn't save — " + e.message; }
-}
-
-/* ============================== Assets ============================== */
-
-async function renderAssets() {
+async function renderWealth() {
   let assets = [], loadError = "";
   try { assets = await api("/assets"); }
   catch (e) { loadError = e.message; }
@@ -726,30 +998,33 @@ async function renderAssets() {
       ? a.owners.map(o => typeof o === "string" ? o : (o?.name || "")).filter(Boolean)
       : [];
     return `
-      <tr>
-        <td>${esc(a.name)}</td>
-        <td class="muted">${esc(a.type)}</td>
-        <td class="muted">${owners.map(esc).join(", ") || "—"}</td>
-        <td class="right">${a.latest_value_gbp != null ? gbp(a.latest_value_gbp, 0) : "—"}</td>
-        <td class="muted">${fdate(a.latest_as_of || a.last_valuation)}</td>
-        <td>${stale ? badge("stale", "warn") : badge("fresh", "good")}</td>
-      </tr>`;
+      <div class="list-row">
+        <div class="txn-row">
+          <div class="txn-main">
+            <div class="txn-desc">${esc(a.name)}</div>
+            <div class="txn-meta"><span>${esc(a.type)}</span>${owners.length ? `<span>${owners.map(esc).join(", ")}</span>` : ""}<span>as of ${fdate(a.latest_as_of || a.last_valuation)}</span></div>
+          </div>
+          <span class="txn-amt">${a.latest_value_gbp != null ? gbp(a.latest_value_gbp, 0) : "—"}</span>
+          ${stale ? badge("stale", "warn") : badge("fresh", "good")}
+        </div>
+      </div>`;
   }).join("");
 
-  const acctOpts = accountOptions(null); // any account — current, property, pension, etc.
+  const acctOpts = accountOptions(null);
   const typeOpts = ASSET_TYPES.map(t => `<option value="${t}">${t}</option>`).join("");
 
   return `
+    ${pageHead("Wealth", "Track everything you own and owe.")}
     ${card(`
       <h2>Add an asset account</h2>
-      <p class="muted small">Property, vehicle, pension, ISA, etc. You only have bank accounts so far — create an asset here first, then value it below.</p>
+      <p class="muted small">Property, vehicle, pension, ISA, etc. Create the account here, then value it below.</p>
       <div class="row">
         <input id="asset-name" placeholder="e.g. Home, SIPP, Car">
         <select id="asset-type">${typeOpts}</select>
         <select id="asset-owner">${memberOptions(null, false)}</select>
         <button onclick="addAssetAccount()">Add account</button>
-        <span id="asset-add-note" class="muted small"></span>
       </div>
+      <span id="asset-add-note" class="muted small"></span>
     `)}
     ${card(`
       <h2>Record a valuation</h2>
@@ -766,9 +1041,9 @@ async function renderAssets() {
     `)}
     ${card(`
       <h2>Assets &amp; liabilities</h2>
-      ${loadError ? emptyRow("Couldn't load assets — " + loadError) :
-        rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Owner(s)</th><th class="right">Latest value</th><th>As of</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`
-             : emptyRow("No property / pension / investment accounts yet — add one above.")}
+      ${loadError ? emptyState("⚠️", "Couldn't load assets", loadError) :
+        rows ? `<div class="list">${rows}</div>` :
+        emptyState("📈", "No asset accounts yet", "Add a property, pension or investment account above to start tracking net worth.")}
     `)}
   `;
 }
@@ -785,8 +1060,7 @@ async function addAssetAccount() {
       is_liability: el("asset-type").value === "liability",
     }) });
     S.accounts = await api("/accounts");
-    note.textContent = "Added — pick it in the valuation form below.";
-    el("view").innerHTML = await renderAssets();
+    render();
   } catch (e) { note.textContent = "Couldn't add — " + e.message; }
 }
 
@@ -801,9 +1075,184 @@ async function addValuation() {
       value_gbp: Number(el("v-value").value || 0),
       note: el("v-note").value.trim() || null,
     }) });
-    note.textContent = "Saved.";
-    el("view").innerHTML = await renderAssets();
+    render();
   } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+/* ============================== More (#more) ============================== */
+
+const MORE_ITEMS = [
+  { hash: "#members", icon: "👪", title: "Members", desc: "Household people and who owns what." },
+  { hash: "#accounts", icon: "🏦", title: "Accounts", desc: "Bank, savings and asset accounts." },
+  { hash: "#policies", icon: "🛡️", title: "Policies", desc: "Insurance cover, premiums &amp; renewals." },
+  { hash: "#payslips", icon: "💷", title: "Payslips", desc: "Upload, parse and confirm pay." },
+  { hash: "#trends", icon: "📊", title: "Trends", desc: "Net worth &amp; spending over time." },
+  { hash: "#export", icon: "⬇️", title: "Export", desc: "Download a UK tax year of records." },
+  { hash: "#insights", icon: "💡", title: "Insights", desc: "Automatic nudges &amp; savings ideas." },
+];
+
+async function renderMore() {
+  return `
+    ${pageHead("More", "Household setup, records and automation.")}
+    <div class="more-grid">
+      ${MORE_ITEMS.map(i => `
+        <a class="more-card" href="${i.hash}">
+          <span class="more-icon">${i.icon}</span>
+          <span class="more-title">${esc(i.title)}</span>
+          <span class="more-desc">${i.desc}</span>
+          <span class="more-arrow">→</span>
+        </a>`).join("")}
+    </div>
+  `;
+}
+
+/* ============================== Members ============================== */
+
+async function renderMembers() {
+  const rows = S.members.map(m => `
+    <div class="list-row txn-row">
+      <div class="txn-main"><div class="txn-desc">${esc(m.name)}</div><div class="txn-meta"><span>${m.is_child ? "child" : "adult"}</span><span>born ${fdate(m.date_of_birth)}</span></div></div>
+    </div>`).join("");
+  return `
+    ${pageHead("Members", "Everyone in the household.", "#more", "More")}
+    ${card(`
+      ${rows ? `<div class="list">${rows}</div>` : emptyState("👪", "No members yet", "Add the people in your household to attribute spending and assets.")}
+      <hr class="hr">
+      <div class="row">
+        <input id="m-name" placeholder="Name">
+        <input id="m-dob" type="date">
+        <label class="check"><input type="checkbox" id="m-child"> child</label>
+        <button onclick="addMember()">Add member</button>
+      </div>
+      <span id="members-note" class="muted small"></span>
+    `)}
+  `;
+}
+
+async function addMember() {
+  const note = el("members-note");
+  const name = el("m-name").value.trim();
+  if (!name) { note.textContent = "Name is required."; return; }
+  try {
+    await api("/members", { method: "POST", body: JSON.stringify({
+      name, is_child: el("m-child").checked, date_of_birth: el("m-dob").value || null,
+    }) });
+    S.members = await api("/members");
+    render();
+  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
+}
+
+/* ============================== Accounts ============================== */
+
+async function renderAccounts() {
+  const rows = S.accounts.map(a => `
+    <div class="list-row txn-row">
+      <div class="txn-main">
+        <div class="txn-desc">${esc(a.name)}</div>
+        <div class="txn-meta"><span>${esc(a.type)}</span><span>${(a.owners || []).map(o => (S.members.find(m => m.id === o.member_id) || {}).name).filter(Boolean).map(esc).join(", ") || "—"}</span><span>${esc(a.currency)}</span></div>
+      </div>
+    </div>`).join("");
+  return `
+    ${pageHead("Accounts", "Everywhere money lives.", "#more", "More")}
+    ${card(`
+      ${rows ? `<div class="list">${rows}</div>` : emptyState("🏦", "No accounts yet", "Add a current, savings or credit card account to get started.")}
+      <hr class="hr">
+      <div class="row">
+        <input id="a-name" placeholder="Account name">
+        <select id="a-type">${ACCOUNT_TYPES.map(t => `<option value="${t}">${t}</option>`).join("")}</select>
+        <select id="a-owner">${memberOptions(null, false)}</select>
+        <label class="check"><input type="checkbox" id="a-liability"> liability</label>
+        <button onclick="addAccount()">Add account</button>
+      </div>
+      <span id="accounts-note" class="muted small"></span>
+    `)}
+  `;
+}
+
+async function addAccount() {
+  const note = el("accounts-note");
+  const name = el("a-name").value.trim();
+  if (!name) { note.textContent = "Name is required."; return; }
+  try {
+    await api("/accounts", { method: "POST", body: JSON.stringify({
+      name, type: el("a-type").value, owner_member_id: el("a-owner").value,
+      is_liability: el("a-liability").checked,
+    }) });
+    S.accounts = await api("/accounts");
+    render();
+  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
+}
+
+/* ============================== Banking ============================== */
+
+async function bankingSectionHtml() {
+  let status = { configured: false, connections: [] }, loadError = "";
+  try { status = await api("/banking/status"); }
+  catch (e) { loadError = e.message; }
+
+  const conns = (status.connections || []).map(c => `
+    <div class="list-row txn-row">
+      <div class="txn-main">
+        <div class="txn-desc">${esc(c.display_name)}</div>
+        <div class="txn-meta"><span>${esc(c.aspsp_name || "")}</span><span>synced ${fdate(c.last_sync_at)}</span><span>consent until ${fdate(c.consent_expires_at)}</span></div>
+      </div>
+      ${c.last_sync_status ? badge(c.last_sync_status, c.last_sync_status === "ok" ? "good" : "bad") : ""}
+      ${c.expiring_soon ? badge("expiring soon", "warn") : ""}
+    </div>`).join("");
+
+  return `
+    ${card(`
+      <div class="spread"><h2>Bank connections</h2><button onclick="bankingSync()">Sync now</button></div>
+      ${loadError ? emptyState("⚠️", "Couldn't load banking status", loadError) :
+        !status.configured ? emptyState("🏦", "Open Banking isn't configured", "Ask an admin to set up Open Banking on this server.") :
+        conns ? `<div class="list">${conns}</div>` : emptyState("🔗", "No banks connected yet", "Connect a bank below to sync transactions automatically.")}
+      <div id="banking-note" class="muted small"></div>
+    `)}
+    ${status.configured ? card(`
+      <h2>Connect a new bank</h2>
+      <div class="row">
+        <input id="bank-country" value="GB" style="width:70px" maxlength="2">
+        <button class="secondary" onclick="loadBanks()">Find banks</button>
+      </div>
+      <div id="bank-list" class="row"></div>
+    `) : ""}
+  `;
+}
+
+async function renderBanking() {
+  return `${pageHead("Banking", "Open Banking connections and sync status.", "#more", "More")}${await bankingSectionHtml()}`;
+}
+
+async function bankingSync() {
+  const note = el("banking-note");
+  note.textContent = "Syncing…";
+  try {
+    await api("/banking/sync", { method: "POST" });
+    note.textContent = "Sync started.";
+    render();
+  } catch (e) { note.textContent = "Sync failed — " + e.message; }
+}
+
+async function loadBanks() {
+  const country = el("bank-country").value.trim() || "GB";
+  const box = el("bank-list");
+  box.innerHTML = `<span class="muted small">Loading banks…</span>`;
+  try {
+    const banks = await api(`/banking/banks?country=${encodeURIComponent(country)}`);
+    const names = (banks || []).map(b => (typeof b === "string" ? b : (b.name || b.aspsp_name)));
+    box.innerHTML = `
+      <select id="bank-select">${names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("")}</select>
+      <button onclick="connectBank('${esc(country)}')">Connect</button>`;
+  } catch (e) { box.innerHTML = `<span class="muted small">Couldn't load banks — ${esc(e.message)}</span>`; }
+}
+
+async function connectBank(country) {
+  try {
+    const res = await api("/banking/connect", { method: "POST", body: JSON.stringify({
+      aspsp_name: el("bank-select").value, country,
+    }) });
+    if (res.url) window.open(res.url, "_blank");
+  } catch (e) { el("banking-note").textContent = "Couldn't start connection — " + e.message; }
 }
 
 /* ============================== Policies ============================== */
@@ -817,18 +1266,24 @@ async function renderPolicies() {
     const days = p.renewal_date ? daysUntil(p.renewal_date) : null;
     const kind = days == null ? "muted" : days <= 14 ? "bad" : days <= 45 ? "warn" : "good";
     return `
-      <tr>
-        <td>${esc(p.provider)}<div class="muted small">${esc(p.kind)}</div></td>
-        <td class="muted">${p.policyholder_member_id ? esc((S.members.find(m => m.id === p.policyholder_member_id) || {}).name || "") : "—"}</td>
-        <td class="right">${p.cover_amount != null ? gbp(p.cover_amount, 0) : "—"}</td>
-        <td class="right">${gbp(p.premium, 2)}<div class="muted small">${esc(p.premium_freq)}</div></td>
-        <td>${fdate(p.renewal_date)} ${days != null ? badge(days + "d", kind) : ""}</td>
-        <td>${p.active ? badge("active", "good") : badge("inactive", "muted")}</td>
-        <td><button class="small secondary" onclick="editPolicy('${p.id}')">Edit</button></td>
-      </tr>`;
+      <div class="list-row txn-row">
+        <div class="txn-main">
+          <div class="txn-desc">${esc(p.provider)} <span class="muted small">${esc(p.kind.replace(/_/g, " "))}</span></div>
+          <div class="txn-meta">
+            <span>${p.policyholder_member_id ? esc((S.members.find(m => m.id === p.policyholder_member_id) || {}).name || "") : "—"}</span>
+            <span>cover ${p.cover_amount != null ? gbp(p.cover_amount, 0) : "—"}</span>
+            <span>premium ${gbp(p.premium, 2)} ${esc(p.premium_freq)}</span>
+            <span>renews ${fdate(p.renewal_date)}</span>
+          </div>
+        </div>
+        ${days != null ? badge(days + "d", kind) : ""}
+        ${p.active ? badge("active", "good") : badge("inactive", "muted")}
+        <button class="small secondary" onclick="editPolicy('${p.id}')">Edit</button>
+      </div>`;
   }).join("");
 
   return `
+    ${pageHead("Policies", "Insurance cover across the household.", "#more", "More")}
     ${card(`
       <h2 id="policy-form-title">Add a policy</h2>
       <input type="hidden" id="p-id">
@@ -851,9 +1306,9 @@ async function renderPolicies() {
     `)}
     ${card(`
       <h2>Policy registry</h2>
-      ${loadError ? emptyRow("Couldn't load policies — " + loadError) :
-        rows ? `<div class="table-wrap"><table><thead><tr><th>Provider</th><th>Holder</th><th class="right">Cover</th><th class="right">Premium</th><th>Renewal</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
-             : emptyRow("No policies recorded yet.")}
+      ${loadError ? emptyState("⚠️", "Couldn't load policies", loadError) :
+        rows ? `<div class="list">${rows}</div>` :
+        emptyState("🛡️", "No policies recorded yet", "Add life, home or car insurance above to track renewals.")}
     `)}
   `;
 }
@@ -904,10 +1359,8 @@ async function savePolicy() {
   try {
     if (id) await api(`/policies/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
     else await api("/policies", { method: "POST", body: JSON.stringify(payload) });
-    note.textContent = "Saved.";
     _policiesCache = [];
-    resetPolicyForm();
-    el("view").innerHTML = await renderPolicies();
+    render();
   } catch (e) { note.textContent = "Couldn't save — " + e.message; }
 }
 
@@ -915,43 +1368,15 @@ async function savePolicy() {
 
 let payslipTab = "pending_review";
 
-async function renderPayslips() {
-  let list = [], loadError = "";
-  try { list = await api("/payslips?status=" + payslipTab); }
-  catch (e) { loadError = e.message; }
-
-  const items = (list || []).map(p => payslipTab === "pending_review" ? pendingPayslipRow(p) : confirmedPayslipRow(p)).join("");
-
-  return `
-    ${card(`
-      <h2>Upload a payslip</h2>
-      <div class="row">
-        <select id="pay-member">${memberOptions(null, false)}</select>
-        <input type="file" id="pay-file" accept="application/pdf,.pdf">
-        <button onclick="uploadPayslip()">Upload &amp; parse</button>
-      </div>
-      <p class="muted small" id="pay-upload-note">Text-based PDF payslips are parsed automatically; low-confidence extractions land in the review list below for correction.</p>
-    `)}
-    ${card(`
-      <div class="tabs">
-        <button class="${payslipTab === "pending_review" ? "active" : ""}" onclick="payslipTab='pending_review';renderPayslipsInto()">Pending review</button>
-        <button class="${payslipTab === "confirmed" ? "active" : ""}" onclick="payslipTab='confirmed';renderPayslipsInto()">Confirmed</button>
-        <button class="${payslipTab === "rejected" ? "active" : ""}" onclick="payslipTab='rejected';renderPayslipsInto()">Rejected</button>
-      </div>
-      ${loadError ? emptyRow("Couldn't load payslips — " + loadError) : (items || emptyRow("Nothing here yet."))}
-    `)}
-  `;
-}
-async function renderPayslipsInto() { el("view").innerHTML = await renderPayslips(); }
-
 function confirmedPayslipRow(p) {
   return `
-    <div class="row spread" style="border-bottom:1px solid var(--border);padding:10px 0">
-      <div>
-        <b>${esc(p.employer || "Payslip")}</b> · ${fdate(p.pay_date)}
-        <div class="muted small">${esc((S.members.find(m => m.id === p.member_id) || {}).name || "")} — net ${gbp(p.net_pay, 2)}</div>
+    <div class="list-row txn-row">
+      <div class="txn-main">
+        <div class="txn-desc">${esc(p.employer || "Payslip")}</div>
+        <div class="txn-meta"><span>${fdate(p.pay_date)}</span><span>${esc((S.members.find(m => m.id === p.member_id) || {}).name || "")}</span></div>
       </div>
-      <span class="badge badge-good">confirmed</span>
+      <span class="txn-amt">${gbp(p.net_pay, 2)}</span>
+      ${badge("confirmed", "good")}
     </div>`;
 }
 
@@ -990,6 +1415,37 @@ function pendingPayslipRow(p) {
     </div>`;
 }
 
+async function renderPayslips() {
+  let list = [], loadError = "";
+  try { list = await api("/payslips?status=" + payslipTab); }
+  catch (e) { loadError = e.message; }
+
+  const items = (list || []).map(p => payslipTab === "pending_review" ? pendingPayslipRow(p) : confirmedPayslipRow(p)).join("");
+
+  return `
+    ${pageHead("Payslips", "Upload, parse and post pay into the ledger.", "#more", "More")}
+    ${card(`
+      <h2>Upload a payslip</h2>
+      <div class="row">
+        <select id="pay-member">${memberOptions(null, false)}</select>
+        <input type="file" id="pay-file" accept="application/pdf,.pdf">
+        <button onclick="uploadPayslip()">Upload &amp; parse</button>
+      </div>
+      <p class="muted small" id="pay-upload-note">Text-based PDF payslips are parsed automatically; low-confidence extractions land in the review list below for correction.</p>
+    `)}
+    ${card(`
+      <div class="seg">
+        <button class="seg-btn ${payslipTab === "pending_review" ? "active" : ""}" onclick="payslipTab='pending_review';render()">Pending review</button>
+        <button class="seg-btn ${payslipTab === "confirmed" ? "active" : ""}" onclick="payslipTab='confirmed';render()">Confirmed</button>
+        <button class="seg-btn ${payslipTab === "rejected" ? "active" : ""}" onclick="payslipTab='rejected';render()">Rejected</button>
+      </div>
+      ${loadError ? emptyState("⚠️", "Couldn't load payslips", loadError) :
+        items ? (payslipTab === "pending_review" ? items : `<div class="list">${items}</div>`) :
+        emptyState("💷", "Nothing here yet", "Upload a payslip above to get started.")}
+    `)}
+  `;
+}
+
 async function uploadPayslip() {
   const note = el("pay-upload-note");
   const f = el("pay-file").files[0];
@@ -997,11 +1453,11 @@ async function uploadPayslip() {
   const fd = new FormData();
   fd.append("member_id", el("pay-member").value);
   fd.append("file", f);
-  note.textContent = "Uploading &amp; parsing…";
+  note.textContent = "Uploading & parsing…";
   try {
     await api("/payslips/upload", { method: "POST", body: fd });
     payslipTab = "pending_review";
-    el("view").innerHTML = await renderPayslips();
+    render();
   } catch (e) { note.textContent = "Upload failed: " + e.message; }
 }
 
@@ -1021,7 +1477,7 @@ async function confirmPayslip(id) {
   try {
     await api(`/payslips/${id}`, { method: "PATCH", body: JSON.stringify({ ..._payslipEdits(id), pension_account_id }) });
     await api(`/payslips/${id}/confirm`, { method: "POST", body: JSON.stringify({ salary_account_id, pension_account_id }) });
-    el("view").innerHTML = await renderPayslips();
+    render();
   } catch (e) { note.textContent = "Couldn't confirm — " + e.message; }
 }
 
@@ -1029,14 +1485,14 @@ async function rejectPayslip(id) {
   if (!confirm("Reject this payslip? It will not post any ledger entries.")) return;
   try {
     await api(`/payslips/${id}/reject`, { method: "POST", body: JSON.stringify({}) });
-    el("view").innerHTML = await renderPayslips();
+    render();
   } catch (e) { el("ps-note-" + id).textContent = "Couldn't reject — " + e.message; }
 }
 
 /* ============================== Trends ============================== */
 
 function lineChart(points, { width = 640, height = 180, pad = 28 } = {}) {
-  if (!points.length) return emptyRow("Not enough history yet.");
+  if (!points.length) return emptyState("📊", "Not enough history yet", "Come back after a few valuations or statement imports.");
   const values = points.map(p => p.value);
   const min = Math.min(0, ...values), max = Math.max(...values, min + 1);
   const x = i => pad + (i / Math.max(1, points.length - 1)) * (width - pad * 2);
@@ -1047,7 +1503,7 @@ function lineChart(points, { width = 640, height = 180, pad = 28 } = {}) {
     <div class="chart-wrap">
       <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
         <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="var(--border)"/>
-        <path d="${area}" fill="var(--good-bg)" stroke="none"/>
+        <path d="${area}" fill="var(--blush)" stroke="none"/>
         <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
         <text x="${pad}" y="${pad - 10}" font-size="11" fill="var(--muted)">${esc(points[0].label)}</text>
         <text x="${width - pad}" y="${pad - 10}" font-size="11" fill="var(--muted)" text-anchor="end">${esc(points[points.length - 1].label)}</text>
@@ -1057,12 +1513,12 @@ function lineChart(points, { width = 640, height = 180, pad = 28 } = {}) {
 }
 
 function hbarChart(items) {
-  if (!items.length) return emptyRow("No spending in this period.");
+  if (!items.length) return emptyState("📊", "No spending in this period", "Import statements or categorise transactions to see trends.");
   const max = Math.max(...items.map(i => i.value), 1);
   return items.map(i => `
     <div class="hbar-row">
       <span>${esc(i.label)}</span>
-      <div class="bar"><div style="width:${Math.max(2, (i.value / max) * 100)}%"></div></div>
+      ${progressBar((i.value / max) * 100, "")}
       <span class="right">${gbp(i.value, 0)}</span>
     </div>`).join("");
 }
@@ -1081,8 +1537,9 @@ async function renderTrends() {
   const bars = Object.entries(byCat).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 10);
 
   return `
-    ${card(`<h2>Net worth history</h2>${err1 ? emptyRow("Couldn't load — " + err1) : lineChart(points)}`)}
-    ${card(`<h2>Top spending categories (last 6 months)</h2>${err2 ? emptyRow("Couldn't load — " + err2) : hbarChart(bars)}`)}
+    ${pageHead("Trends", "Net worth and spending over time.", "#more", "More")}
+    ${card(`<h2>Net worth history</h2>${err1 ? emptyState("⚠️", "Couldn't load net worth history", err1) : lineChart(points)}`)}
+    ${card(`<h2>Top spending categories (last 6 months)</h2>${err2 ? emptyState("⚠️", "Couldn't load spend trends", err2) : hbarChart(bars)}`)}
   `;
 }
 
@@ -1102,16 +1559,19 @@ function taxYearOptions() {
 }
 
 async function renderExport() {
-  return card(`
-    <h2>Export a tax year</h2>
-    <p class="muted">Download the full ledger — transactions, valuations, payslips, policies, holdings — for a UK tax year (6 Apr – 5 Apr).</p>
-    <div class="row">
-      <select id="exp-year">${taxYearOptions()}</select>
-      <select id="exp-fmt"><option value="json">JSON</option><option value="csv">CSV (zip)</option></select>
-      <button onclick="downloadExport()">Download</button>
-      <span id="exp-note" class="muted small"></span>
-    </div>
-  `);
+  return `
+    ${pageHead("Export", "Download the full ledger for a UK tax year.", "#more", "More")}
+    ${card(`
+      <h2>Export a tax year</h2>
+      <p class="muted">Transactions, valuations, payslips, policies and holdings for a UK tax year (6 Apr – 5 Apr).</p>
+      <div class="row">
+        <select id="exp-year">${taxYearOptions()}</select>
+        <select id="exp-fmt"><option value="json">JSON</option><option value="csv">CSV (zip)</option></select>
+        <button onclick="downloadExport()">Download</button>
+        <span id="exp-note" class="muted small"></span>
+      </div>
+    `)}
+  `;
 }
 
 async function downloadExport() {
@@ -1123,142 +1583,6 @@ async function downloadExport() {
     triggerDownload(blob, filename || `family-budget-${ty}.${fmt === "json" ? "json" : "zip"}`);
     note.textContent = "Downloaded.";
   } catch (e) { note.textContent = "Export failed: " + e.message; }
-}
-
-/* ============================== Members ============================== */
-
-async function renderMembers() {
-  const rows = S.members.map(m => `
-    <tr><td>${esc(m.name)}</td><td class="muted">${m.is_child ? "child" : "adult"}</td><td class="muted">${fdate(m.date_of_birth)}</td></tr>
-  `).join("");
-  return card(`
-    <h2>Household members</h2>
-    ${rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Date of birth</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyRow("No members yet.")}
-    <hr class="hr">
-    <div class="row">
-      <input id="m-name" placeholder="Name">
-      <input id="m-dob" type="date">
-      <label class="check"><input type="checkbox" id="m-child"> child</label>
-      <button onclick="addMember()">Add member</button>
-      <span id="members-note" class="muted small"></span>
-    </div>
-  `);
-}
-
-async function addMember() {
-  const note = el("members-note");
-  const name = el("m-name").value.trim();
-  if (!name) { note.textContent = "Name is required."; return; }
-  try {
-    await api("/members", { method: "POST", body: JSON.stringify({
-      name, is_child: el("m-child").checked, date_of_birth: el("m-dob").value || null,
-    }) });
-    S.members = await api("/members");
-    el("view").innerHTML = await renderMembers();
-  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
-}
-
-/* ============================== Accounts ============================== */
-
-async function renderAccounts() {
-  const rows = S.accounts.map(a => `
-    <tr>
-      <td>${esc(a.name)}</td><td class="muted">${esc(a.type)}</td>
-      <td class="muted">${(a.owners || []).map(o => (S.members.find(m => m.id === o.member_id) || {}).name).filter(Boolean).map(esc).join(", ") || "—"}</td>
-      <td class="muted">${esc(a.currency)}</td>
-    </tr>`).join("");
-  return card(`
-    <h2>Accounts</h2>
-    ${rows ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Owner(s)</th><th>Currency</th></tr></thead><tbody>${rows}</tbody></table></div>` : emptyRow("No accounts yet.")}
-    <hr class="hr">
-    <div class="row">
-      <input id="a-name" placeholder="Account name">
-      <select id="a-type">${ACCOUNT_TYPES.map(t => `<option value="${t}">${t}</option>`).join("")}</select>
-      <select id="a-owner">${memberOptions(null, false)}</select>
-      <label class="check"><input type="checkbox" id="a-liability"> liability</label>
-      <button onclick="addAccount()">Add account</button>
-      <span id="accounts-note" class="muted small"></span>
-    </div>
-  `);
-}
-
-async function addAccount() {
-  const note = el("accounts-note");
-  const name = el("a-name").value.trim();
-  if (!name) { note.textContent = "Name is required."; return; }
-  try {
-    await api("/accounts", { method: "POST", body: JSON.stringify({
-      name, type: el("a-type").value, owner_member_id: el("a-owner").value,
-      is_liability: el("a-liability").checked,
-    }) });
-    S.accounts = await api("/accounts");
-    el("view").innerHTML = await renderAccounts();
-  } catch (e) { note.textContent = "Couldn't add — " + e.message; }
-}
-
-/* ============================== Banking ============================== */
-
-async function renderBanking() {
-  let status = { configured: false, connections: [] }, loadError = "";
-  try { status = await api("/banking/status"); }
-  catch (e) { loadError = e.message; }
-
-  const conns = (status.connections || []).map(c => `
-    <tr>
-      <td>${esc(c.display_name)}<div class="muted small">${esc(c.aspsp_name || "")}</div></td>
-      <td class="muted">${fdate(c.last_sync_at)} ${c.last_sync_status ? badge(c.last_sync_status, c.last_sync_status === "ok" ? "good" : "bad") : ""}</td>
-      <td>${fdate(c.consent_expires_at)} ${c.expiring_soon ? badge("expiring soon", "warn") : ""}</td>
-    </tr>`).join("");
-
-  return `
-    ${card(`
-      <div class="spread"><h2>Bank connections</h2><button onclick="bankingSync()">Sync now</button></div>
-      ${loadError ? emptyRow("Couldn't load banking status — " + loadError) :
-        !status.configured ? emptyRow("Open Banking isn't configured on this server yet.") :
-        conns ? `<div class="table-wrap"><table><thead><tr><th>Bank</th><th>Last sync</th><th>Consent</th></tr></thead><tbody>${conns}</tbody></table></div>` : emptyRow("No banks connected yet.")}
-      <div id="banking-note" class="muted small"></div>
-    `)}
-    ${status.configured ? card(`
-      <h2>Connect a new bank</h2>
-      <div class="row">
-        <input id="bank-country" value="GB" style="width:70px" maxlength="2">
-        <button class="secondary" onclick="loadBanks()">Find banks</button>
-      </div>
-      <div id="bank-list" class="row"></div>
-    `) : ""}
-  `;
-}
-
-async function bankingSync() {
-  const note = el("banking-note");
-  note.textContent = "Syncing…";
-  try {
-    await api("/banking/sync", { method: "POST" });
-    note.textContent = "Sync started.";
-    el("view").innerHTML = await renderBanking();
-  } catch (e) { note.textContent = "Sync failed — " + e.message; }
-}
-
-async function loadBanks() {
-  const country = el("bank-country").value.trim() || "GB";
-  const box = el("bank-list");
-  box.innerHTML = `<span class="muted small">Loading banks…</span>`;
-  try {
-    const banks = await api(`/banking/banks?country=${encodeURIComponent(country)}`);
-    const names = (banks || []).map(b => (typeof b === "string" ? b : (b.name || b.aspsp_name)));
-    box.innerHTML = `
-      <select id="bank-select">${names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("")}</select>
-      <button onclick="connectBank('${esc(country)}')">Connect</button>`;
-  } catch (e) { box.innerHTML = `<span class="muted small">Couldn't load banks — ${esc(e.message)}</span>`; }
-}
-
-async function connectBank(country) {
-  try {
-    const res = await api("/banking/connect", { method: "POST", body: JSON.stringify({
-      aspsp_name: el("bank-select").value, country,
-    }) });
-    if (res.url) window.open(res.url, "_blank");
-  } catch (e) { el("banking-note").textContent = "Couldn't start connection — " + e.message; }
 }
 
 /* ============================== Insights ============================== */
@@ -1283,19 +1607,20 @@ async function renderInsights() {
     </div>`).join("");
 
   return `
+    ${pageHead("Insights", "Automatic nudges and savings ideas.", "#more", "More")}
     <div class="spread" style="margin-bottom:12px">
-      <h2>Insights</h2>
       <button onclick="runInsightRules()">Run rules</button>
     </div>
     <div id="insights-note" class="muted small" style="margin-bottom:8px"></div>
-    ${loadError ? emptyRow("Couldn't load insights — " + loadError) : (cards || emptyRow("No open insights right now."))}
+    ${loadError ? emptyState("⚠️", "Couldn't load insights", loadError) :
+      cards || emptyState("💡", "No open insights right now", "Run the rules engine to look for savings opportunities.")}
   `;
 }
 
 async function setInsight(id, status) {
   try {
     await api(`/insights/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
-    el("view").innerHTML = await renderInsights();
+    render();
   } catch (e) { el("insights-note").textContent = "Couldn't update — " + e.message; }
 }
 
@@ -1305,7 +1630,7 @@ async function runInsightRules() {
   try {
     const res = await api("/insights/run", { method: "POST" });
     note.textContent = `Created ${res.created ?? 0} new insight(s).`;
-    el("view").innerHTML = await renderInsights();
+    render();
   } catch (e) { note.textContent = "Couldn't run rules — " + e.message; }
 }
 
