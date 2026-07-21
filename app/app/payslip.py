@@ -12,7 +12,10 @@ from datetime import datetime, timedelta
 import httpx
 import pdfplumber
 
-DATE_FORMATS = ["%Y-%m-%d", "%d/%m/%Y", "%d/%m/%y", "%d-%m-%Y"]
+DATE_FORMATS = [
+    "%Y-%m-%d", "%d/%m/%Y", "%d/%m/%y", "%d-%m-%Y",
+    "%d %b %Y", "%d %B %Y", "%d-%b-%Y", "%d-%B-%Y",
+]
 NI_RE = re.compile(r"\b[A-Z]{2}\d{6}[A-D]\b")
 POSTCODE_RE = re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b", re.I)
 ADDRESS_LINE_RE = re.compile(
@@ -28,6 +31,51 @@ MONEY_FIELDS = {
 }
 DATE_FIELDS = {"pay_date", "period_start", "period_end"}
 
+# Loose UK patterns tried when named templates don't fire (label and amount may
+# be on the same line or the next line).
+_MONEY = r"£?\s*([\d,]+\.\d{2})"
+_DATE = r"(\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4}|\d{4}-\d{2}-\d{2})"
+HEURISTIC_FIELDS: dict[str, list[str]] = {
+    "pay_date": [
+        rf"(?:Pay\s*Date|Payment\s*Date|Paid\s*On|Date\s*Paid|Payment)[:\s]+{_DATE}",
+        rf"(?:Pay\s*Date|Payment\s*Date)[:\s]*\n\s*{_DATE}",
+    ],
+    "gross_pay": [
+        rf"(?:Total\s+)?Gross(?:\s+Pay|\s+Salary|\s+Earnings)?[:\s]+{_MONEY}",
+        rf"(?:Total\s+)?Gross(?:\s+Pay)?[:\s]*\n\s*{_MONEY}",
+    ],
+    "net_pay": [
+        rf"Net(?:\s+Pay|\s+Amount|\s+Salary|\s+Earnings)?[:\s]+{_MONEY}",
+        rf"(?:Take[\s-]?Home(?:\s+Pay)?|Amount\s+Payable)[:\s]+{_MONEY}",
+        rf"Net(?:\s+Pay)?[:\s]*\n\s*{_MONEY}",
+    ],
+    "income_tax": [
+        rf"(?:PAYE|Income)\s*Tax[:\s]+{_MONEY}",
+        rf"Tax(?:\s*/\s*PAYE)?[:\s]+{_MONEY}",
+        rf"(?:PAYE|Income)\s*Tax[:\s]*\n\s*{_MONEY}",
+    ],
+    "employee_ni": [
+        rf"(?:Employee\s+)?(?:NI|N\.I\.|National\s+Insurance)(?:\s+Contribution)?[:\s]+{_MONEY}",
+        rf"(?:Employee\s+)?National\s+Insurance[:\s]*\n\s*{_MONEY}",
+    ],
+    "pension_employee": [
+        rf"(?:Employee\s+)?Pension(?:\s+Contribution)?[:\s]+{_MONEY}",
+        rf"Pension\s+Deduction[:\s]+{_MONEY}",
+    ],
+    "employer": [
+        r"(?:Employer|Company|Organisation)[:\s]+([^\n]{2,80})",
+    ],
+    "tax_code": [
+        r"Tax\s*Code[:\s]+([SC]?\d{1,4}[LMNTK]|BR|D0|D1|NT|0T)",
+    ],
+    "taxable_pay": [
+        rf"Taxable(?:\s+Pay|\s+Gross)?[:\s]+{_MONEY}",
+    ],
+    "student_loan": [
+        rf"Student\s+Loan[:\s]+{_MONEY}",
+    ],
+}
+
 DEFAULT_TEMPLATES = [
     {
         "name": "sdworx-generic",
@@ -35,39 +83,45 @@ DEFAULT_TEMPLATES = [
             {"contains": "SD Worx"},
             {"regex": r"Tax Code"},
         ],
+        "detect_mode": "all",
         "fields": {
             "employer": {"regex": r"Employer[:\s]+(.+?)(?:\n|$)"},
-            "pay_date": {"regex": r"Pay Date[:\s]+(\d{1,2}/\d{1,2}/\d{2,4})"},
-            "period_start": {"regex": r"Period Start[:\s]+(\d{1,2}/\d{1,2}/\d{2,4})"},
-            "period_end": {"regex": r"Period End[:\s]+(\d{1,2}/\d{1,2}/\d{2,4})"},
+            "pay_date": {"regex": rf"Pay Date[:\s]+{_DATE}"},
+            "period_start": {"regex": rf"Period Start[:\s]+{_DATE}"},
+            "period_end": {"regex": rf"Period End[:\s]+{_DATE}"},
             "tax_code": {"regex": r"Tax Code[:\s]+([SC]?\d{1,4}[LMNTK]|BR|D0|D1|NT|0T)"},
-            "gross_pay": {"regex": r"(?:Total )?Gross Pay\s+£?\s*([\d,]+\.\d{2})"},
-            "taxable_pay": {"regex": r"Taxable Pay\s+£?\s*([\d,]+\.\d{2})"},
-            "income_tax": {"regex": r"PAYE Tax\s+£?\s*([\d,]+\.\d{2})"},
-            "employee_ni": {"regex": r"(?:Employee )?National Insurance\s+£?\s*([\d,]+\.\d{2})"},
-            "employer_ni": {"regex": r"Employer(?:'s)? National Insurance\s+£?\s*([\d,]+\.\d{2})"},
-            "pension_employee": {"regex": r"(?:Employee )?Pension\s+£?\s*([\d,]+\.\d{2})"},
-            "pension_employer": {"regex": r"Employer(?:'s)? Pension\s+£?\s*([\d,]+\.\d{2})"},
-            "student_loan": {"regex": r"Student Loan\s+£?\s*([\d,]+\.\d{2})"},
-            "net_pay": {"regex": r"Net Pay\s+£?\s*([\d,]+\.\d{2})"},
+            "gross_pay": {"regex": rf"(?:Total )?Gross Pay\s+{_MONEY}"},
+            "taxable_pay": {"regex": rf"Taxable Pay\s+{_MONEY}"},
+            "income_tax": {"regex": rf"PAYE Tax\s+{_MONEY}"},
+            "employee_ni": {"regex": rf"(?:Employee )?National Insurance\s+{_MONEY}"},
+            "employer_ni": {"regex": rf"Employer(?:'s)? National Insurance\s+{_MONEY}"},
+            "pension_employee": {"regex": rf"(?:Employee )?Pension\s+{_MONEY}"},
+            "pension_employer": {"regex": rf"Employer(?:'s)? Pension\s+{_MONEY}"},
+            "student_loan": {"regex": rf"Student Loan\s+{_MONEY}"},
+            "net_pay": {"regex": rf"Net Pay\s+{_MONEY}"},
         },
     },
     {
         "name": "uk-payroll-generic",
+        # ANY of these is enough to try this pack (was too strict with ALL)
         "detect": [
-            {"regex": r"Tax Code[:\s]+"},
-            {"regex": r"Net Pay"},
-            {"regex": r"Gross Pay|PAYE"},
+            {"regex": r"Tax\s*Code"},
+            {"regex": r"Net\s+Pay"},
+            {"regex": r"Gross\s+Pay"},
+            {"regex": r"PAYE"},
+            {"regex": r"National\s+Insurance"},
         ],
+        "detect_mode": "any",
         "fields": {
-            "employer": {"regex": r"(?:Company|Employer)[:\s]+(.+?)(?:\n|$)"},
-            "pay_date": {"regex": r"(?:Pay Date|Payment Date)[:\s]+(\d{1,2}/\d{1,2}/\d{2,4})"},
-            "tax_code": {"regex": r"Tax Code[:\s]+([SC]?\d{1,4}[LMNTK]|BR|D0|D1|NT|0T)"},
-            "gross_pay": {"regex": r"(?:Total )?Gross(?: Pay)?\s+£?\s*([\d,]+\.\d{2})"},
-            "income_tax": {"regex": r"(?:Income )?Tax(?:/PAYE)?\s+£?\s*([\d,]+\.\d{2})"},
-            "employee_ni": {"regex": r"(?:Employee )?(?:NI|National Insurance)\s+£?\s*([\d,]+\.\d{2})"},
-            "pension_employee": {"regex": r"(?:Employee )?Pension(?: Contribution)?\s+£?\s*([\d,]+\.\d{2})"},
-            "net_pay": {"regex": r"Net Pay\s+£?\s*([\d,]+\.\d{2})"},
+            "employer": {"regex": r"(?:Company|Employer|Organisation)[:\s]+(.+?)(?:\n|$)"},
+            "pay_date": {"regex": rf"(?:Pay Date|Payment Date|Paid On)[:\s]+{_DATE}"},
+            "tax_code": {"regex": r"Tax\s*Code[:\s]+([SC]?\d{1,4}[LMNTK]|BR|D0|D1|NT|0T)"},
+            "gross_pay": {"regex": rf"(?:Total\s+)?Gross(?:\s+Pay|\s+Salary)?[:\s]+{_MONEY}"},
+            "income_tax": {"regex": rf"(?:PAYE|Income)\s*Tax[:\s]+{_MONEY}"},
+            "employee_ni": {"regex": rf"(?:Employee\s+)?(?:NI|National Insurance)[:\s]+{_MONEY}"},
+            "pension_employee": {"regex": rf"(?:Employee\s+)?Pension(?:\s+Contribution)?[:\s]+{_MONEY}"},
+            "net_pay": {"regex": rf"Net(?:\s+Pay|\s+Amount)?[:\s]+{_MONEY}"},
+            "student_loan": {"regex": rf"Student\s+Loan[:\s]+{_MONEY}"},
         },
     },
 ]
@@ -132,6 +186,9 @@ def extract_text(pdf_bytes: bytes) -> str:
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
         for page in pdf.pages:
             t = page.extract_text() or ""
+            if not t.strip():
+                # denser layouts sometimes need layout mode
+                t = page.extract_text(layout=True) or ""
             if t.strip():
                 parts.append(t)
     return "\n\n".join(parts)
@@ -156,6 +213,15 @@ def _detect_match(text: str, rule: dict) -> bool:
     return False
 
 
+def _detect_ok(text: str, tmpl: dict) -> bool:
+    detect = tmpl.get("detect") or []
+    if not detect:
+        return True
+    mode = (tmpl.get("detect_mode") or "all").lower()
+    hits = [_detect_match(text, r) for r in detect]
+    return any(hits) if mode == "any" else all(hits)
+
+
 def _field_value(field: str, raw: str):
     if field in DATE_FIELDS:
         return _parse_date(raw)
@@ -169,8 +235,7 @@ def match_template(text: str, templates: list[dict]) -> tuple[dict | None, float
     best_conf = 0.0
 
     for tmpl in templates:
-        detect = tmpl.get("detect") or []
-        if detect and not all(_detect_match(text, r) for r in detect):
+        if not _detect_ok(text, tmpl):
             continue
 
         parsed: dict = {}
@@ -183,6 +248,8 @@ def match_template(text: str, templates: list[dict]) -> tuple[dict | None, float
                     parsed[fname] = val
 
         found = sum(1 for f in REQUIRED_FIELDS if parsed.get(f) is not None)
+        if found == 0:
+            continue
         if found == len(REQUIRED_FIELDS):
             optional = [f for f in fields if f not in REQUIRED_FIELDS]
             bonus = sum(0.01 for f in optional if parsed.get(f) is not None)
@@ -194,6 +261,22 @@ def match_template(text: str, templates: list[dict]) -> tuple[dict | None, float
             best, best_conf = parsed, conf
 
     return best, best_conf
+
+
+def extract_heuristic(text: str) -> tuple[dict, float]:
+    """Best-effort UK field scrape without employer-specific templates."""
+    parsed: dict = {}
+    for fname, patterns in HEURISTIC_FIELDS.items():
+        for pat in patterns:
+            m = re.search(pat, text, re.I | re.M)
+            if m and m.lastindex:
+                val = _field_value(fname, m.group(1))
+                if val is not None and val != "":
+                    parsed[fname] = val
+                    break
+    found = sum(1 for f in REQUIRED_FIELDS if parsed.get(f) is not None)
+    conf = round((found / len(REQUIRED_FIELDS)) * 0.8, 2) if found else 0.0
+    return parsed, conf
 
 
 def _llm_request(text: str, extra: str = "") -> dict | None:
@@ -378,7 +461,10 @@ def validate(parsed: dict) -> dict:
     return out
 
 
-def _empty_result() -> dict:
+def _empty_result(*, issue: str = "nothing parsed", text_len: int = 0) -> dict:
+    issues = [issue]
+    if text_len == 0:
+        issues.append("no text extracted — PDF may be a scan/image")
     return {
         "employer": None,
         "pay_date": None,
@@ -401,18 +487,59 @@ def _empty_result() -> dict:
         "confidence": 0.0,
         "parse_method": "manual",
         "parse_confidence": 0.0,
-        "validation": {"arithmetic_ok": False, "issues": ["nothing parsed"]},
+        "needs_manual": True,
+        "validation": {"arithmetic_ok": False, "issues": issues},
     }
+
+
+def coerce_for_persist(parsed: dict) -> dict:
+    """Fill NOT NULL DB columns so a failed/partial parse can still land in review."""
+    out = dict(parsed)
+    raw_missing = (
+        parsed.get("gross_pay") is None
+        or parsed.get("net_pay") is None
+        or parsed.get("pay_date") is None
+    )
+    today = datetime.now().date().isoformat()
+    issues = list((out.get("validation") or {}).get("issues") or [])
+    if not out.get("pay_date"):
+        out["pay_date"] = today
+        issues.append("pay_date missing — defaulted to today; edit before confirm")
+    for money in ("gross_pay", "net_pay", "income_tax", "employee_ni",
+                  "pension_employee", "student_loan"):
+        if out.get(money) is None:
+            out[money] = 0.0
+    out.setdefault("other_deductions", [])
+    ytd = dict(out.get("ytd") or {})
+    if issues:
+        ytd["_parse_issues"] = issues
+    out["ytd"] = ytd
+    out["parse_method"] = out.get("parse_method") or "manual"
+    out["parse_confidence"] = float(out.get("parse_confidence") or out.get("confidence") or 0)
+    out["needs_manual"] = bool(
+        parsed.get("needs_manual") or raw_missing or out["parse_confidence"] < 0.5
+    )
+    validation = dict(out.get("validation") or {})
+    validation["issues"] = issues
+    validation.setdefault("arithmetic_ok", False)
+    out["validation"] = validation
+    return out
 
 
 def parse_pdf(pdf_bytes: bytes, templates: list[dict] | None = None) -> dict:
     templates = templates if templates is not None else DEFAULT_TEMPLATES
     text = extract_text(pdf_bytes)
     if not text.strip():
-        return _empty_result()
+        return _empty_result(issue="nothing parsed", text_len=0)
 
     parsed, conf = match_template(text, templates)
     parse_method = "template"
+
+    if conf < 0.5:
+        heur, hconf = extract_heuristic(text)
+        if hconf > conf:
+            parsed, conf = heur, hconf
+            parse_method = "template"  # still rule-based
 
     if conf < 0.9:
         llm = parse_with_llm(text)
@@ -422,7 +549,15 @@ def parse_pdf(pdf_bytes: bytes, templates: list[dict] | None = None) -> dict:
             parse_method = "llm"
 
     if not parsed:
-        return _empty_result()
+        # last chance: heuristic alone
+        heur, hconf = extract_heuristic(text)
+        if heur:
+            parsed, conf = heur, hconf
+            parse_method = "template"
+        else:
+            empty = _empty_result(issue="nothing parsed", text_len=len(text))
+            empty["extracted_text_preview"] = text[:400]
+            return empty
 
     parsed = _normalize_parsed(parsed)
     validated = validate(parsed)
@@ -431,6 +566,9 @@ def parse_pdf(pdf_bytes: bytes, templates: list[dict] | None = None) -> dict:
     validated["parse_confidence"] = final_conf
     validated.setdefault("other_deductions", [])
     validated.setdefault("ytd", {})
+    validated["needs_manual"] = final_conf < 0.5 or any(
+        validated.get(f) is None for f in ("gross_pay", "net_pay", "pay_date")
+    )
     return validated
 
 

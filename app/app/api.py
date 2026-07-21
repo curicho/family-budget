@@ -1077,18 +1077,22 @@ async def upload_payslip(
     content = await file.read()
     if len(content) > 10_000_000:
         raise HTTPException(413, "file too large")
+    if not content:
+        raise HTTPException(422, "empty file")
 
     with db() as conn:
+        if not conn.execute("SELECT 1 FROM member WHERE id = %s", (member_id,)).fetchone():
+            raise HTTPException(404, "member not found")
+
         db_templates = conn.execute(
             "SELECT name, detect, fields FROM payslip_template"
         ).fetchall()
         templates = list(db_templates) + payslip.DEFAULT_TEMPLATES
         parsed = payslip.parse_pdf(content, templates)
-
-        if not parsed.get("pay_date") or parsed.get("gross_pay") is None \
-                or parsed.get("net_pay") is None:
-            raise HTTPException(
-                422, f"could not parse required payslip fields: {parsed.get('validation')}")
+        # Always persist into pending_review — never block upload on parse failure.
+        # Placeholders (today / £0) are filled so NOT NULL columns are satisfied;
+        # the review UI is where the user corrects amounts before confirm.
+        parsed = payslip.coerce_for_persist(parsed)
 
         sha = _hashlib.sha256(content).hexdigest()
         doc = conn.execute(
@@ -1108,8 +1112,31 @@ async def upload_payslip(
                   parse_confidence, status, pension_account_id)
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s, 'pending_review', %s)
-               ON CONFLICT (member_id, pay_date, gross_pay)
-                 DO UPDATE SET document_id = EXCLUDED.document_id
+               ON CONFLICT (document_id)
+                 DO UPDATE SET
+                   member_id = EXCLUDED.member_id,
+                   employer = EXCLUDED.employer,
+                   pay_date = EXCLUDED.pay_date,
+                   period_start = EXCLUDED.period_start,
+                   period_end = EXCLUDED.period_end,
+                   tax_code = EXCLUDED.tax_code,
+                   gross_pay = EXCLUDED.gross_pay,
+                   taxable_pay = EXCLUDED.taxable_pay,
+                   income_tax = EXCLUDED.income_tax,
+                   employee_ni = EXCLUDED.employee_ni,
+                   employer_ni = EXCLUDED.employer_ni,
+                   pension_employee = EXCLUDED.pension_employee,
+                   pension_employer = EXCLUDED.pension_employer,
+                   pension_scheme_type = EXCLUDED.pension_scheme_type,
+                   student_loan = EXCLUDED.student_loan,
+                   student_loan_plan = EXCLUDED.student_loan_plan,
+                   other_deductions = EXCLUDED.other_deductions,
+                   net_pay = EXCLUDED.net_pay,
+                   ytd = EXCLUDED.ytd,
+                   parse_method = EXCLUDED.parse_method,
+                   parse_confidence = EXCLUDED.parse_confidence,
+                   pension_account_id = EXCLUDED.pension_account_id,
+                   status = 'pending_review'
                RETURNING *""",
             (doc["id"], member_id, parsed.get("employer"), parsed["pay_date"],
              parsed.get("period_start"), parsed.get("period_end"), parsed.get("tax_code"),
@@ -1123,8 +1150,17 @@ async def upload_payslip(
         ).fetchone()
         conn.commit()
 
-    return {"payslip": row, "validation": parsed.get("validation"),
-            "salary_account_id": salary_account_id}
+    return {
+        "payslip": row,
+        "validation": parsed.get("validation"),
+        "needs_manual": bool(parsed.get("needs_manual")),
+        "salary_account_id": salary_account_id,
+        "message": (
+            "Uploaded for review — fill in the amounts (parser couldn't read this PDF)."
+            if parsed.get("needs_manual")
+            else "Uploaded — check the figures then confirm."
+        ),
+    }
 
 
 @app.get("/api/payslips", dependencies=[Depends(authed)])

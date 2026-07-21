@@ -1505,13 +1505,20 @@ const PAYSLIP_FIELDS = [
 ];
 
 function pendingPayslipRow(p) {
-  const issues = (p.validation && p.validation.issues) || [];
+  const ytd = (typeof p.ytd === "object" && p.ytd) || {};
+  const issues = (p.validation && p.validation.issues) || ytd._parse_issues || [];
+  const conf = p.parse_confidence != null ? Number(p.parse_confidence) : 0;
+  const needsManual = conf < 0.5 || (Number(p.gross_pay) === 0 && Number(p.net_pay) === 0);
+  const hint = needsManual
+    ? "Parser couldn't read this PDF reliably — enter pay date, gross and net from the slip, then confirm."
+    : "";
   return `
     <div class="card" style="margin-bottom:12px;box-shadow:none;border-color:var(--border)">
       <div class="spread">
         <h3>${esc(p.employer || "Payslip")} — ${fdate(p.pay_date)}</h3>
-        <span class="muted small">parsed via ${esc(p.parse_method || "?")} · confidence ${p.parse_confidence != null ? Math.round(p.parse_confidence * 100) + "%" : "—"}</span>
+        <span class="muted small">parsed via ${esc(p.parse_method || "?")} · confidence ${p.parse_confidence != null ? Math.round(conf * 100) + "%" : "—"}</span>
       </div>
+      ${hint ? `<p class="muted small">⚠ ${esc(hint)}</p>` : ""}
       ${issues.length ? `<p class="muted small">⚠ ${esc(issues.join("; "))}</p>` : ""}
       <div class="form-grid">
         ${PAYSLIP_FIELDS.map(([key, label, type]) => `
@@ -1534,6 +1541,9 @@ async function renderPayslips() {
   try { list = await api("/payslips?status=" + payslipTab); }
   catch (e) { loadError = e.message; }
 
+  const flash = sessionStorage.getItem("pay-flash") || "";
+  if (flash) sessionStorage.removeItem("pay-flash");
+
   const items = (list || []).map(p => payslipTab === "pending_review" ? pendingPayslipRow(p) : confirmedPayslipRow(p)).join("");
 
   return `
@@ -1545,7 +1555,7 @@ async function renderPayslips() {
         <input type="file" id="pay-file" accept="application/pdf,.pdf">
         <button onclick="uploadPayslip()">Upload &amp; parse</button>
       </div>
-      <p class="muted small" id="pay-upload-note">Text-based PDF payslips are parsed automatically; low-confidence extractions land in the review list below for correction.</p>
+      <p class="muted small" id="pay-upload-note">${esc(flash || "Text-based PDFs are parsed automatically. Scans or unfamiliar layouts still upload into Pending review so you can type the figures in.")}</p>
     `)}
     ${card(`
       <div class="seg">
@@ -1569,7 +1579,10 @@ async function uploadPayslip() {
   fd.append("file", f);
   note.textContent = "Uploading & parsing…";
   try {
-    await api("/payslips/upload", { method: "POST", body: fd });
+    const res = await api("/payslips/upload", { method: "POST", body: fd });
+    sessionStorage.setItem("pay-flash", res.message || (res.needs_manual
+      ? "Uploaded for review — fill in the amounts from the PDF, then confirm."
+      : "Uploaded — check the figures then confirm."));
     payslipTab = "pending_review";
     render();
   } catch (e) { note.textContent = "Upload failed: " + e.message; }
