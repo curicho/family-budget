@@ -1108,21 +1108,34 @@ async function renderMore() {
 
 /* ============================== Members ============================== */
 
+let editingMemberId = null;
+
 async function renderMembers() {
   const rows = S.members.map(m => `
     <div class="list-row txn-row">
-      <div class="txn-main"><div class="txn-desc">${esc(m.name)}</div><div class="txn-meta"><span>${m.is_child ? "child" : "adult"}</span><span>born ${fdate(m.date_of_birth)}</span></div></div>
+      <div class="txn-main">
+        <div class="txn-desc">${esc(m.name)}</div>
+        <div class="txn-meta"><span>${m.is_child ? "child" : "adult"}</span><span>born ${fdate(m.date_of_birth)}</span></div>
+      </div>
+      <div class="row" style="margin:0;gap:6px">
+        <button class="small secondary" onclick="startEditMember('${m.id}')">Edit</button>
+        <button class="small ghost" onclick="deleteMember('${m.id}')">Delete</button>
+      </div>
     </div>`).join("");
+  const editing = editingMemberId ? S.members.find(m => m.id === editingMemberId) : null;
   return `
     ${pageHead("Members", "Everyone in the household.", "#more", "More")}
     ${card(`
       ${rows ? `<div class="list">${rows}</div>` : emptyState("👪", "No members yet", "Add the people in your household to attribute spending and assets.")}
       <hr class="hr">
+      <h3>${editing ? "Edit member" : "Add member"}</h3>
       <div class="row">
-        <input id="m-name" placeholder="Name">
-        <input id="m-dob" type="date">
-        <label class="check"><input type="checkbox" id="m-child"> child</label>
-        <button onclick="addMember()">Add member</button>
+        <input id="m-name" placeholder="Name" value="${editing ? esc(editing.name) : ""}">
+        <input id="m-dob" type="date" value="${editing && editing.date_of_birth ? String(editing.date_of_birth).slice(0, 10) : ""}">
+        <label class="check"><input type="checkbox" id="m-child" ${editing && editing.is_child ? "checked" : ""}> child</label>
+        ${editing
+          ? `<button onclick="saveMember()">Save</button><button class="secondary" onclick="cancelEditMember()">Cancel</button>`
+          : `<button onclick="addMember()">Add member</button>`}
       </div>
       <span id="members-note" class="muted small"></span>
     `)}
@@ -1138,11 +1151,51 @@ async function addMember() {
       name, is_child: el("m-child").checked, date_of_birth: el("m-dob").value || null,
     }) });
     S.members = await api("/members");
+    editingMemberId = null;
     render();
   } catch (e) { note.textContent = "Couldn't add — " + e.message; }
 }
 
+function startEditMember(id) {
+  editingMemberId = id;
+  render();
+}
+
+function cancelEditMember() {
+  editingMemberId = null;
+  render();
+}
+
+async function saveMember() {
+  const note = el("members-note");
+  const name = el("m-name").value.trim();
+  if (!name || !editingMemberId) { note.textContent = "Name is required."; return; }
+  try {
+    await api(`/members/${editingMemberId}`, { method: "PATCH", body: JSON.stringify({
+      name, is_child: el("m-child").checked, date_of_birth: el("m-dob").value || null,
+    }) });
+    S.members = await api("/members");
+    editingMemberId = null;
+    render();
+  } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+async function deleteMember(id) {
+  const m = S.members.find(x => x.id === id);
+  if (!confirm(`Delete member “${m ? m.name : "this person"}”? This cannot be undone.`)) return;
+  try {
+    await api(`/members/${id}`, { method: "DELETE" });
+    if (editingMemberId === id) editingMemberId = null;
+    S.members = await api("/members");
+    render();
+  } catch (e) {
+    alert("Couldn't delete — " + e.message);
+  }
+}
+
 /* ============================== Accounts ============================== */
+
+let editingAccountId = null;
 
 async function renderAccounts() {
   const rows = S.accounts.map(a => `
@@ -1151,18 +1204,27 @@ async function renderAccounts() {
         <div class="txn-desc">${esc(a.name)}</div>
         <div class="txn-meta"><span>${esc(a.type)}</span><span>${(a.owners || []).map(o => (S.members.find(m => m.id === o.member_id) || {}).name).filter(Boolean).map(esc).join(", ") || "—"}</span><span>${esc(a.currency)}</span></div>
       </div>
+      <div class="row" style="margin:0;gap:6px">
+        <button class="small secondary" onclick="startEditAccount('${a.id}')">Edit</button>
+        <button class="small ghost" onclick="deleteAccount('${a.id}')">Delete</button>
+      </div>
     </div>`).join("");
+  const editing = editingAccountId ? S.accounts.find(a => a.id === editingAccountId) : null;
+  const ownerId = editing && editing.owners && editing.owners[0] ? editing.owners[0].member_id : null;
   return `
     ${pageHead("Accounts", "Everywhere money lives.", "#more", "More")}
     ${card(`
       ${rows ? `<div class="list">${rows}</div>` : emptyState("🏦", "No accounts yet", "Add a current, savings or credit card account to get started.")}
       <hr class="hr">
+      <h3>${editing ? "Edit account" : "Add account"}</h3>
       <div class="row">
-        <input id="a-name" placeholder="Account name">
-        <select id="a-type">${ACCOUNT_TYPES.map(t => `<option value="${t}">${t}</option>`).join("")}</select>
-        <select id="a-owner">${memberOptions(null, false)}</select>
-        <label class="check"><input type="checkbox" id="a-liability"> liability</label>
-        <button onclick="addAccount()">Add account</button>
+        <input id="a-name" placeholder="Account name" value="${editing ? esc(editing.name) : ""}">
+        <select id="a-type">${ACCOUNT_TYPES.map(t => `<option value="${t}"${editing && editing.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
+        <select id="a-owner">${memberOptions(ownerId, false)}</select>
+        <label class="check"><input type="checkbox" id="a-liability" ${editing && editing.is_liability ? "checked" : ""}> liability</label>
+        ${editing
+          ? `<button onclick="saveAccount()">Save</button><button class="secondary" onclick="cancelEditAccount()">Cancel</button>`
+          : `<button onclick="addAccount()">Add account</button>`}
       </div>
       <span id="accounts-note" class="muted small"></span>
     `)}
@@ -1179,8 +1241,47 @@ async function addAccount() {
       is_liability: el("a-liability").checked,
     }) });
     S.accounts = await api("/accounts");
+    editingAccountId = null;
     render();
   } catch (e) { note.textContent = "Couldn't add — " + e.message; }
+}
+
+function startEditAccount(id) {
+  editingAccountId = id;
+  render();
+}
+
+function cancelEditAccount() {
+  editingAccountId = null;
+  render();
+}
+
+async function saveAccount() {
+  const note = el("accounts-note");
+  const name = el("a-name").value.trim();
+  if (!name || !editingAccountId) { note.textContent = "Name is required."; return; }
+  try {
+    await api(`/accounts/${editingAccountId}`, { method: "PATCH", body: JSON.stringify({
+      name, type: el("a-type").value, owner_member_id: el("a-owner").value,
+      is_liability: el("a-liability").checked,
+    }) });
+    S.accounts = await api("/accounts");
+    editingAccountId = null;
+    render();
+  } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+async function deleteAccount(id) {
+  const a = S.accounts.find(x => x.id === id);
+  if (!confirm(`Remove account “${a ? a.name : "this account"}”? It will be archived (history kept).`)) return;
+  try {
+    await api(`/accounts/${id}`, { method: "DELETE" });
+    if (editingAccountId === id) editingAccountId = null;
+    S.accounts = await api("/accounts");
+    render();
+  } catch (e) {
+    alert("Couldn't delete — " + e.message);
+  }
 }
 
 /* ============================== Banking ============================== */
@@ -1279,6 +1380,7 @@ async function renderPolicies() {
         ${days != null ? badge(days + "d", kind) : ""}
         ${p.active ? badge("active", "good") : badge("inactive", "muted")}
         <button class="small secondary" onclick="editPolicy('${p.id}')">Edit</button>
+        <button class="small ghost" onclick="deletePolicy('${p.id}')">Delete</button>
       </div>`;
   }).join("");
 
@@ -1362,6 +1464,18 @@ async function savePolicy() {
     _policiesCache = [];
     render();
   } catch (e) { note.textContent = "Couldn't save — " + e.message; }
+}
+
+async function deletePolicy(id) {
+  const p = (_policiesCache || []).find(x => x.id === id);
+  if (!confirm(`Delete policy “${p ? p.provider : "this policy"}”?`)) return;
+  try {
+    await api(`/policies/${id}`, { method: "DELETE" });
+    _policiesCache = [];
+    render();
+  } catch (e) {
+    alert("Couldn't delete — " + e.message);
+  }
 }
 
 /* ============================== Payslips ============================== */

@@ -148,6 +148,12 @@ class MemberIn(BaseModel):
     date_of_birth: str | None = None
 
 
+class MemberPatch(BaseModel):
+    name: str | None = None
+    is_child: bool | None = None
+    date_of_birth: str | None = None
+
+
 @app.get("/api/members", dependencies=[Depends(authed)])
 def list_members():
     with db() as conn:
@@ -167,12 +173,65 @@ def create_member(m: MemberIn):
         return row
 
 
+@app.patch("/api/members/{member_id}", dependencies=[Depends(authed)])
+def patch_member(member_id: str, body: MemberPatch):
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        raise HTTPException(400, "no fields to update")
+    cols = list(updates.keys())
+    set_clause = ", ".join(f"{c} = %s" for c in cols)
+    params = [updates[c] for c in cols] + [member_id]
+    with db() as conn:
+        row = conn.execute(
+            f"UPDATE member SET {set_clause} WHERE id = %s RETURNING *", params
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "member not found")
+        conn.commit()
+        return row
+
+
+@app.delete("/api/members/{member_id}", dependencies=[Depends(authed)])
+def delete_member(member_id: str):
+    with db() as conn:
+        if not conn.execute("SELECT 1 FROM member WHERE id = %s", (member_id,)).fetchone():
+            raise HTTPException(404, "member not found")
+        slips = conn.execute(
+            "SELECT COUNT(*) AS n FROM payslip WHERE member_id = %s", (member_id,)
+        ).fetchone()["n"]
+        if slips:
+            raise HTTPException(
+                409,
+                f"member has {slips} payslip(s) — delete or reassign those first",
+            )
+        conn.execute("DELETE FROM account_owner WHERE member_id = %s", (member_id,))
+        conn.execute(
+            "UPDATE transaction SET member_id = NULL WHERE member_id = %s", (member_id,)
+        )
+        conn.execute(
+            "UPDATE policy SET policyholder_member_id = NULL WHERE policyholder_member_id = %s",
+            (member_id,),
+        )
+        conn.execute("DELETE FROM member WHERE id = %s", (member_id,))
+        conn.commit()
+    return {"ok": True}
+
+
 class AccountIn(BaseModel):
     name: str
     type: str
     currency: str = "GBP"
     owner_member_id: str
     is_liability: bool = False
+    valuation_stale_after_days: int | None = None
+
+
+class AccountPatch(BaseModel):
+    name: str | None = None
+    type: str | None = None
+    currency: str | None = None
+    is_liability: bool | None = None
+    owner_member_id: str | None = None
     valuation_stale_after_days: int | None = None
 
 
@@ -216,6 +275,68 @@ def create_account(a: AccountIn):
         )
         conn.commit()
         return row
+
+
+@app.patch("/api/accounts/{account_id}", dependencies=[Depends(authed)])
+def patch_account(account_id: str, body: AccountPatch):
+    updates = body.model_dump(exclude_unset=True)
+    owner_id = updates.pop("owner_member_id", None)
+    stale_days = updates.pop("valuation_stale_after_days", None)
+    if not updates and owner_id is None and stale_days is None:
+        raise HTTPException(400, "no fields to update")
+    with db() as conn:
+        if updates:
+            if "type" in updates:
+                updates["type"] = updates["type"]  # cast below
+            cols = []
+            params = []
+            for c, v in updates.items():
+                if c == "type":
+                    cols.append("type = %s::account_type")
+                else:
+                    cols.append(f"{c} = %s")
+                params.append(v)
+            params.append(account_id)
+            row = conn.execute(
+                f"UPDATE account SET {', '.join(cols)} WHERE id = %s AND NOT archived RETURNING *",
+                params,
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT * FROM account WHERE id = %s AND NOT archived", (account_id,)
+            ).fetchone()
+        if not row:
+            raise HTTPException(404, "account not found")
+        if stale_days is not None:
+            conn.execute(
+                """UPDATE account SET valuation_stale_after = (%s::text || ' days')::interval
+                   WHERE id = %s""",
+                (stale_days, account_id),
+            )
+        if owner_id is not None:
+            conn.execute("DELETE FROM account_owner WHERE account_id = %s", (account_id,))
+            conn.execute(
+                "INSERT INTO account_owner (account_id, member_id) VALUES (%s, %s)",
+                (account_id, owner_id),
+            )
+        row = conn.execute("SELECT * FROM account WHERE id = %s", (account_id,)).fetchone()
+        conn.commit()
+        return row
+
+
+@app.delete("/api/accounts/{account_id}", dependencies=[Depends(authed)])
+def delete_account(account_id: str):
+    """Archive the account (soft delete) so history remains intact."""
+    with db() as conn:
+        row = conn.execute(
+            """UPDATE account SET archived = TRUE
+               WHERE id = %s AND NOT archived RETURNING id""",
+            (account_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "account not found")
+        conn.commit()
+    return {"ok": True}
 
 
 class ValuationIn(BaseModel):
@@ -864,6 +985,19 @@ def update_policy(policy_id: str, body: PolicyPatch):
             raise HTTPException(404, "policy not found")
         conn.commit()
         return row
+
+
+@app.delete("/api/policies/{policy_id}", dependencies=[Depends(authed)])
+def delete_policy(policy_id: str):
+    with db() as conn:
+        conn.execute("DELETE FROM health_claim WHERE policy_id = %s", (policy_id,))
+        row = conn.execute(
+            "DELETE FROM policy WHERE id = %s RETURNING id", (policy_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "policy not found")
+        conn.commit()
+    return {"ok": True}
 
 
 @app.get("/api/policies/renewals", dependencies=[Depends(authed)])
