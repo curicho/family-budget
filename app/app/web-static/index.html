@@ -1506,12 +1506,24 @@ const PAYSLIP_FIELDS = [
 
 function pendingPayslipRow(p) {
   const ytd = (typeof p.ytd === "object" && p.ytd) || {};
-  const issues = (p.validation && p.validation.issues) || ytd._parse_issues || [];
+  let issues = (p.validation && p.validation.issues) || ytd._parse_issues || [];
+  const payDate = p.pay_date ? String(p.pay_date).slice(0, 10) : "";
+  // Hide stale upload warnings once the field has a real value
+  issues = issues.filter(issue => {
+    const low = String(issue).toLowerCase();
+    if (low.includes("pay_date") && payDate) return false;
+    return true;
+  });
   const conf = p.parse_confidence != null ? Number(p.parse_confidence) : 0;
   const needsManual = conf < 0.5 || (Number(p.gross_pay) === 0 && Number(p.net_pay) === 0);
   const hint = needsManual
     ? "Parser couldn't read this PDF reliably — enter pay date, gross and net from the slip, then confirm."
     : "";
+  const salaryOpts = accountOptions(null, ["current", "savings"]) || accountOptions(null);
+  const dateVal = (key) => {
+    const v = p[key];
+    return v ? String(v).slice(0, 10) : "";
+  };
   return `
     <div class="card" style="margin-bottom:12px;box-shadow:none;border-color:var(--border)">
       <div class="spread">
@@ -1523,10 +1535,15 @@ function pendingPayslipRow(p) {
       <div class="form-grid">
         ${PAYSLIP_FIELDS.map(([key, label, type]) => `
           <div class="field"><label>${esc(label)}</label>
-            <input id="ps-${p.id}-${key}" type="${type}" step="${type === "number" ? "0.01" : ""}" value="${esc(p[key] ?? "")}">
+            <input id="ps-${p.id}-${key}" type="${type}" step="${type === "number" ? "0.01" : ""}"
+              value="${esc(type === "date" ? dateVal(key) : (p[key] ?? ""))}">
           </div>`).join("")}
-        <div class="field"><label>Salary account</label><select id="ps-${p.id}-salary">${accountOptions(null, ["current", "savings"])}</select></div>
-        <div class="field"><label>Pension account (optional)</label><select id="ps-${p.id}-pension"><option value="">— none —</option>${accountOptions(null, ["sipp", "workplace_pension"])}</select></div>
+        <div class="field"><label>Salary account</label>
+          <select id="ps-${p.id}-salary">${salaryOpts || `<option value="">— add an account first —</option>`}</select>
+        </div>
+        <div class="field"><label>Pension account (optional)</label>
+          <select id="ps-${p.id}-pension"><option value="">— none —</option>${accountOptions(null, ["sipp", "workplace_pension"])}</select>
+        </div>
       </div>
       <div class="row">
         <button onclick="confirmPayslip('${p.id}')">Confirm &amp; post</button>
@@ -1601,9 +1618,18 @@ async function confirmPayslip(id) {
   const note = el("ps-note-" + id);
   const salary_account_id = el(`ps-${id}-salary`).value;
   const pension_account_id = el(`ps-${id}-pension`).value || null;
+  if (!salary_account_id) {
+    note.textContent = "Pick a salary account first (add one under Money → Accounts if the list is empty).";
+    return;
+  }
+  const edits = _payslipEdits(id);
+  if (!edits.pay_date) {
+    note.textContent = "Set the pay date before confirming.";
+    return;
+  }
   try {
-    await api(`/payslips/${id}`, { method: "PATCH", body: JSON.stringify({ ..._payslipEdits(id), pension_account_id }) });
-    await api(`/payslips/${id}/confirm`, { method: "POST", body: JSON.stringify({ salary_account_id, pension_account_id }) });
+    await api(`/payslips/${id}`, { method: "PATCH", body: JSON.stringify({ ...edits, pension_account_id }) });
+    await api(`/payslips/${id}/confirm`, { method: "POST", body: JSON.stringify({ salary_account_id }) });
     render();
   } catch (e) { note.textContent = "Couldn't confirm — " + e.message; }
 }

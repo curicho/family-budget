@@ -597,16 +597,37 @@ def _find_bank_credit(conn, account_id: str, pay_date: str, amount: float) -> di
     ).fetchone()
 
 
+def _as_iso_date(value) -> str:
+    """Normalise DB date/datetime/str to YYYY-MM-DD for SQL and matching."""
+    if value is None:
+        raise ValueError("pay_date is required")
+    if hasattr(value, "date") and callable(value.date) and not isinstance(value, str):
+        try:
+            return value.date().isoformat()
+        except Exception:
+            pass
+    if hasattr(value, "isoformat") and not isinstance(value, str):
+        return value.isoformat()[:10]
+    s = str(value).strip()
+    if "T" in s:
+        s = s.split("T", 1)[0]
+    elif " " in s:
+        s = s.split(" ", 1)[0]
+    return s[:10]
+
+
 def post_confirmed(conn, payslip_row: dict, salary_account_id: str) -> dict:
     """Post ledger entries for a confirmed payslip. Returns action summary."""
     payslip_id = payslip_row["id"]
     member_id = payslip_row["member_id"]
-    pay_date = str(payslip_row["pay_date"])
+    pay_date = _as_iso_date(payslip_row["pay_date"])
     doc_id = payslip_row.get("document_id")
     currency_row = conn.execute(
         "SELECT currency FROM account WHERE id = %s", (salary_account_id,)
     ).fetchone()
-    currency = currency_row["currency"] if currency_row else "GBP"
+    if not currency_row:
+        raise ValueError("salary account not found")
+    currency = currency_row["currency"] or "GBP"
 
     salary_cat = _category_id(conn, "Salary")
     tax_cat = _category_id(conn, "Income Tax")

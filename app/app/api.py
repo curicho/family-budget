@@ -1223,6 +1223,29 @@ def patch_payslip(payslip_id: str, body: PayslipPatch):
         ).fetchone()
         if not row:
             raise HTTPException(404, "payslip not found")
+        # Drop stale parse warnings for fields the user just corrected
+        ytd = dict(row.get("ytd") or {})
+        issues = list(ytd.get("_parse_issues") or [])
+        if issues:
+            cleared = []
+            for issue in issues:
+                low = issue.lower()
+                if "pay_date" in low and updates.get("pay_date"):
+                    continue
+                if "gross" in low and updates.get("gross_pay") is not None:
+                    continue
+                if "net" in low and updates.get("net_pay") is not None:
+                    continue
+                cleared.append(issue)
+            if cleared != issues:
+                if cleared:
+                    ytd["_parse_issues"] = cleared
+                else:
+                    ytd.pop("_parse_issues", None)
+                row = conn.execute(
+                    "UPDATE payslip SET ytd = %s WHERE id = %s RETURNING *",
+                    (Json(ytd), payslip_id),
+                ).fetchone()
         conn.commit()
         return row
 
@@ -1233,14 +1256,27 @@ class ConfirmPayslipIn(BaseModel):
 
 @app.post("/api/payslips/{payslip_id}/confirm", dependencies=[Depends(authed)])
 def confirm_payslip(payslip_id: str, body: ConfirmPayslipIn):
+    if not body.salary_account_id or not body.salary_account_id.strip():
+        raise HTTPException(400, "pick a salary account before confirming")
     with db() as conn:
         row = conn.execute("SELECT * FROM payslip WHERE id = %s", (payslip_id,)).fetchone()
         if not row:
             raise HTTPException(404, "payslip not found")
         if row["status"] != "pending_review":
             raise HTTPException(409, f"payslip is {row['status']}, not pending review")
-        summary = payslip.post_confirmed(conn, row, body.salary_account_id)
-        conn.commit()
+        acc = conn.execute(
+            "SELECT id FROM account WHERE id = %s AND NOT archived",
+            (body.salary_account_id,),
+        ).fetchone()
+        if not acc:
+            raise HTTPException(400, "salary account not found — add a current/savings account first")
+        # Use values already on the row (user should PATCH first); re-read after optional sync
+        try:
+            summary = payslip.post_confirmed(conn, row, body.salary_account_id)
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise HTTPException(500, f"posting failed: {e}") from e
         return summary
 
 
