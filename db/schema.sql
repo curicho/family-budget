@@ -173,9 +173,8 @@ CREATE TABLE payslip (
     status        TEXT NOT NULL DEFAULT 'pending_review'
                   CHECK (status IN ('pending_review','confirmed','rejected')),
     pension_account_id UUID REFERENCES account(id),  -- where contributions post
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-    -- Re-upload of the same PDF is idempotent via document.sha256 +
-    -- payslip.document_id UNIQUE (see migrations/004_payslip_upload_fallback.sql).
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (member_id, pay_date, gross_pay)          -- idempotent re-upload guard
 );
 
 -- ---------------------------------------------------------------------------
